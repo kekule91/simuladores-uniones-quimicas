@@ -1,1 +1,934 @@
-$file:/workspace/simuladores-uniones/simuladores/sim-c07-polaridad/index.html
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>¿Hacia dónde se corre la nube?</title>
+<style>
+  :root {
+    --azul: #1F5C8B;
+    --texto: #1E293B;
+    --acento: #E07A1F;
+    --ok: #2E8B57;
+    --error: #C0392B;
+    --panel: #EEF4F9;
+    --borde: #D8E2EC;
+    --violeta: #6D4AA8;
+    --viendo: #FFF4EA;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: #fff;
+    color: var(--texto);
+    font-family: Arial, Helvetica, sans-serif;
+    line-height: 1.4;
+  }
+  .topbar { height: 6px; background: var(--azul); }
+  .pagina { max-width: 1120px; margin: 0 auto; padding: 18px 18px 36px; }
+  .kicker {
+    margin: 0;
+    color: var(--acento);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  h1 { margin: 6px 0 4px; color: var(--azul); font-size: 1.85rem; line-height: 1.15; }
+  .consigna { margin: 0 0 16px; font-size: 1.05rem; }
+  .layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.55fr) minmax(260px, 0.72fr);
+    grid-template-areas: "sim ctrl" "viendo viendo";
+    gap: 16px;
+    align-items: start;
+  }
+  .sim { grid-area: sim; }
+  .ctrl { grid-area: ctrl; }
+  .viendo { grid-area: viendo; }
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--borde);
+    border-radius: 16px;
+    padding: 14px 14px 16px;
+  }
+  .svg-marco { width: 100%; height: auto; display: block; }
+  .nota-modelo { margin: 4px 2px 10px; font-size: 0.92rem; }
+  .tira-caja { position: relative; margin: 8px 8px 0; }
+  .tira {
+    position: relative;
+    height: 18px;
+    border-radius: 999px;
+    background: linear-gradient(90deg,
+      #d5efe4 0%,
+      #e4f0d4 18%,
+      #f4e7c8 40%,
+      #f3d2a4 58%,
+      #eeaf6e 76%,
+      #e08a45 100%);
+  }
+  .tira-regla {
+    position: absolute;
+    left: 60.606%;
+    top: -7px;
+    height: 32px;
+    border-left: 2px dashed rgba(31, 92, 139, 0.55);
+    pointer-events: none;
+  }
+  .tira-marca {
+    position: absolute;
+    top: -7px;
+    width: 18px;
+    height: 32px;
+    margin-left: -9px;
+    border-radius: 8px;
+    background: var(--azul);
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 1px var(--azul);
+    transition: left 0.25s ease;
+  }
+  .tira-leyendas {
+    position: relative;
+    height: 36px;
+    margin-top: 4px;
+    font-size: 0.82rem;
+  }
+  .tira-leyendas span { position: absolute; top: 0; }
+  .tira-leyendas .izq { left: 0; }
+  .tira-leyendas .der { right: 0; }
+  .tira-leyendas .regla {
+    left: 60.606%;
+    transform: translateX(-50%);
+    color: var(--azul);
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .curva-titulo { margin: 12px 8px 0; font-size: 0.92rem; font-weight: 700; color: var(--azul); }
+  .curva-nota { margin: 2px 8px 0; font-size: 0.88rem; }
+  label { display: block; font-weight: 700; margin: 0 0 6px; }
+  .campo { margin-bottom: 12px; }
+  select, button {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 1rem;
+    min-height: 44px;
+  }
+  select {
+    width: 100%;
+    border: 1px solid var(--borde);
+    border-radius: 12px;
+    background: #fff;
+    color: var(--texto);
+    padding: 8px 12px;
+  }
+  .botones { display: flex; flex-direction: column; gap: 10px; }
+  button {
+    border-radius: 12px;
+    padding: 10px 14px;
+    cursor: pointer;
+  }
+  button.primario {
+    background: var(--azul);
+    color: #fff;
+    border: 2px solid var(--azul);
+    font-weight: 700;
+  }
+  button.secundario {
+    background: #fff;
+    color: var(--azul);
+    border: 2px solid var(--azul);
+  }
+  button:disabled { opacity: 0.45; cursor: not-allowed; }
+  .ejemplo-ahora { min-height: 1.2em; margin: 0; font-size: 0.92rem; }
+  .viendo {
+    background: var(--viendo);
+    border: 1px solid var(--borde);
+    border-radius: 16px;
+    padding: 14px 16px 8px;
+  }
+  .viendo h2 { margin: 0 0 8px; color: var(--azul); font-size: 1.15rem; }
+  .viendo p { margin: 0 0 10px; }
+  .tag {
+    display: inline-block;
+    min-width: 92px;
+    text-align: center;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    border-radius: 999px;
+    padding: 3px 8px;
+    margin-right: 8px;
+    vertical-align: middle;
+  }
+  .tag-macro { background: var(--ok); }
+  .tag-sub { background: var(--violeta); }
+  .tag-sim { background: var(--acento); }
+  .pie { margin: 14px 2px 0; font-size: 0.8rem; color: var(--texto); }
+  :focus-visible { outline: 3px solid var(--acento); outline-offset: 2px; }
+  .scrim {
+    position: fixed;
+    inset: 0;
+    background: rgba(30, 41, 59, 0.45);
+    z-index: 20;
+  }
+  .guia {
+    position: fixed;
+    z-index: 21;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: min(720px, calc(100% - 24px));
+    max-height: min(88vh, 900px);
+    overflow: auto;
+    background: #fff;
+    color: var(--texto);
+    border: 1px solid var(--borde);
+    border-radius: 18px;
+    padding: 18px 18px 22px;
+  }
+  .guia h2 { margin: 0 0 6px; color: var(--azul); }
+  .guia h3 { margin: 14px 0 4px; font-size: 1rem; color: var(--azul); }
+  .guia .tipo { color: var(--acento); font-size: 0.78rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+  .linea-resp { border-bottom: 1px solid var(--texto); height: 26px; margin-top: 6px; }
+  .guia-acciones { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+  .datos-alumno { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 8px 0 4px; }
+  @media (max-width: 860px) {
+    .layout { grid-template-columns: 1fr; grid-template-areas: "sim" "ctrl" "viendo"; }
+    h1 { font-size: 1.5rem; }
+    .tira-leyendas .regla { white-space: normal; width: 9.2rem; text-align: center; }
+    .datos-alumno { grid-template-columns: 1fr; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after {
+      animation: none !important;
+      transition: none !important;
+    }
+  }
+  @media print {
+    .no-print { display: none !important; }
+    .scrim { display: none !important; }
+    body { background: #fff; }
+    .guia, .guia[hidden] {
+      display: block !important;
+      position: static !important;
+      transform: none !important;
+      width: auto !important;
+      max-height: none !important;
+      overflow: visible !important;
+      border: none !important;
+      box-shadow: none !important;
+      padding: 0 !important;
+    }
+    .pregunta { break-inside: avoid; }
+    @page { margin: 14mm; }
+  }
+</style>
+</head>
+<body>
+<div class="topbar"></div>
+<div class="pagina">
+  <header>
+    <p class="kicker">Química 5.º · Uniones químicas · Clase 07</p>
+    <h1>¿Hacia dónde se corre la nube?</h1>
+    <p class="consigna">Mirá el continuo: iónico y covalente no son dos cajas, y polar no es carga neta.</p>
+  </header>
+
+  <div class="layout">
+    <section class="panel sim" aria-labelledby="tit-sim">
+      <h2 id="tit-sim" class="no-print" style="position:absolute;left:-999px">Simulación del par</h2>
+      <svg id="escena" class="svg-marco" viewBox="0 0 680 250" role="img" aria-labelledby="t-sub">
+        <ellipse id="nube" cx="340" cy="118" rx="150" ry="78" fill="url(#gradNube)"></ellipse>
+        <radialGradient id="gradNube" cx="50%" cy="50%" r="50%">
+          <stop id="nube0" offset="0%" stop-color="#6D4AA8" stop-opacity="0.5"></stop>
+          <stop offset="58%" stop-color="#6D4AA8" stop-opacity="0.14"></stop>
+          <stop offset="100%" stop-color="#6D4AA8" stop-opacity="0"></stop>
+        </radialGradient>
+        <radialGradient id="gradA" cx="32%" cy="30%" r="68%">
+          <stop offset="0%" stop-color="#ffffff"></stop>
+          <stop id="aMedio" offset="42%" stop-color="#5B8FBF"></stop>
+          <stop id="aBorde" offset="100%" stop-color="#1F5C8B"></stop>
+        </radialGradient>
+        <radialGradient id="gradB" cx="32%" cy="30%" r="68%">
+          <stop offset="0%" stop-color="#ffffff"></stop>
+          <stop id="bMedio" offset="42%" stop-color="#E0A060"></stop>
+          <stop id="bBorde" offset="100%" stop-color="#E07A1F"></stop>
+        </radialGradient>
+        <circle id="esfA" cx="250" cy="118" r="54" fill="url(#gradA)"></circle>
+        <circle id="esfB" cx="430" cy="118" r="54" fill="url(#gradB)"></circle>
+        <text id="simA" x="250" y="126" text-anchor="middle" fill="#fff" font-size="26" font-family="Arial, Helvetica, sans-serif" font-weight="700">?</text>
+        <text id="simB" x="430" y="126" text-anchor="middle" fill="#fff" font-size="26" font-family="Arial, Helvetica, sans-serif" font-weight="700">?</text>
+        <text id="marcaA" x="250" y="48" text-anchor="middle" fill="#1E293B" font-size="20" font-family="Arial, Helvetica, sans-serif" font-weight="700"></text>
+        <text id="marcaB" x="430" y="48" text-anchor="middle" fill="#1E293B" font-size="20" font-family="Arial, Helvetica, sans-serif" font-weight="700"></text>
+      </svg>
+      <p class="nota-modelo">Modelo: esferas y una nube de densidad. No es una foto y no hay electrones girando.</p>
+      <div class="tira-caja">
+        <div class="tira" id="tira">
+          <div class="tira-regla" aria-hidden="true"></div>
+          <div class="tira-marca" id="tira-marca" hidden></div>
+        </div>
+        <div class="tira-leyendas" aria-hidden="true">
+          <span class="izq">0</span>
+          <span class="regla">regla práctica ≈ 2,0</span>
+          <span class="der">3,3</span>
+        </div>
+      </div>
+      <p id="tira-txt" class="curva-nota">La tira no tiene cortes. La línea punteada es una regla práctica, no una pared.</p>
+      <p class="curva-titulo">Figura 9.7 · carácter iónico del enlace</p>
+      <svg id="grafico" class="svg-marco" viewBox="0 0 680 196" role="img" aria-label="Puntos de carácter iónico de la Figura 9.7">
+        <line x1="54" y1="150" x2="640" y2="150" stroke="#D8E2EC" stroke-width="2"></line>
+        <line x1="54" y1="22" x2="54" y2="150" stroke="#D8E2EC" stroke-width="2"></line>
+        <line id="linea20" stroke="#1F5C8B" stroke-width="1.5" stroke-dasharray="4 4" opacity="0.55"></line>
+        <text id="txt20" fill="#1F5C8B" font-size="12" font-family="Arial" font-weight="700">≈ 2,0</text>
+        <path id="trazo" fill="none" stroke="#6D4AA8" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"></path>
+        <g id="puntos-fijos"></g>
+        <circle id="punto-par" r="7" fill="#E07A1F" stroke="#fff" stroke-width="2" visibility="hidden"></circle>
+        <text x="18" y="96" fill="#1E293B" font-size="11" font-family="Arial" transform="rotate(-90 18 96)">% iónico</text>
+        <text x="48" y="146" text-anchor="end" fill="#1E293B" font-size="11" font-family="Arial">0</text>
+        <text x="48" y="34" text-anchor="end" fill="#1E293B" font-size="11" font-family="Arial">100</text>
+        <text x="347" y="176" text-anchor="middle" fill="#1E293B" font-size="13" font-family="Arial">ΔEN</text>
+      </svg>
+      <p class="curva-nota">La línea solo une los pares rotulados de la figura. Si el círculo no coincide con uno de esos puntos, no hay un % para leer.</p>
+    </section>
+
+    <section class="panel ctrl no-print" aria-labelledby="tit-ctrl">
+      <h2 id="tit-ctrl" style="margin:0 0 10px;color:#1F5C8B;font-size:1.15rem">Armá el par</h2>
+      <div class="campo">
+        <label for="sel-a">Elemento de la izquierda</label>
+        <select id="sel-a"></select>
+      </div>
+      <div class="campo">
+        <label for="sel-b">Elemento de la derecha</label>
+        <select id="sel-b"></select>
+      </div>
+      <div class="botones">
+        <button type="button" class="primario" id="btn-ejemplos">Ejemplos</button>
+        <p class="ejemplo-ahora" id="ejemplo-ahora" aria-live="polite"></p>
+        <button type="button" class="secundario" id="btn-swap">Intercambiar</button>
+        <button type="button" class="secundario" id="btn-reiniciar">Reiniciar</button>
+        <button type="button" class="secundario" id="btn-guia" aria-expanded="false" aria-controls="guia">Guía de trabajo</button>
+      </div>
+    </section>
+
+    <section class="viendo" aria-live="polite">
+      <h2>Qué estás viendo</h2>
+      <p><span class="tag tag-macro">macro</span> <span id="t-macro"></span></p>
+      <p><span class="tag tag-sub">submicro</span> <span id="t-sub"></span></p>
+      <p><span class="tag tag-sim">simbólico</span> <span id="t-sim"></span></p>
+    </section>
+  </div>
+  <p class="pie no-print">Números: Chang y Goldsby, Química, 12.ª ed., Figura 9.5 y Figura 9.7. He, Ne, Ar y Rn no están: esa figura no les da electronegatividad.</p>
+</div>
+
+<div class="scrim no-print" id="scrim" hidden></div>
+<section id="guia" class="guia" hidden role="dialog" aria-modal="true" aria-labelledby="guia-titulo">
+  <p class="kicker">Química 5.º · Uniones químicas · Clase 07</p>
+  <h2 id="guia-titulo">Guía de trabajo · ¿Hacia dónde se corre la nube?</h2>
+  <p>Respondé con tus palabras. La primera pregunta se contesta antes de tocar los ejemplos.</p>
+  <div class="datos-alumno">
+    <div>Nombre<div class="linea-resp"></div></div>
+    <div>Curso<div class="linea-resp"></div></div>
+  </div>
+
+  <article class="pregunta">
+    <p class="tipo">Predicción · antes de probar</p>
+    <h3>1. Ordená HF, HCl y HI de más polar a menos polar.</h3>
+    <p>Anotá el orden y por qué lo pensás así. No abras los ejemplos todavía.</p>
+    <div class="linea-resp"></div>
+    <div class="linea-resp"></div>
+    <div class="linea-resp"></div>
+  </article>
+
+  <article class="pregunta">
+    <p class="tipo">Observación</p>
+    <h3>2. Elegí el ejemplo H₂. ¿La nube se corre? ¿Aparecen δ+ y δ−?</h3>
+    <p>Describí lo que ves en las esferas, no lo que “debería” pasar.</p>
+    <div class="linea-resp"></div>
+    <div class="linea-resp"></div>
+  </article>
+
+  <article class="pregunta">
+    <p class="tipo">Observación</p>
+    <h3>3. Pasá por HCl, HF y NaCl.</h3>
+    <p>¿La nube se corre de a poco o salta de caja? ¿En cuál de los tres el marcador pasa la línea ≈ 2,0?</p>
+    <div class="linea-resp"></div>
+    <div class="linea-resp"></div>
+    <div class="linea-resp"></div>
+  </article>
+
+  <article class="pregunta">
+    <p class="tipo">Explicación</p>
+    <h3>4. En HCl se ven δ+ y δ−. ¿El par tiene carga neta?</h3>
+    <p>Justificá con el panel. No alcanza con decir sí o no.</p>
+    <div class="linea-resp"></div>
+    <div class="linea-resp"></div>
+    <div class="linea-resp"></div>
+  </article>
+
+  <article class="pregunta">
+    <p class="tipo">Transferencia</p>
+    <h3>5. Alguien dice: «si no es iónico, es covalente puro».</h3>
+    <p>Elegí un par que quede entre el HCl y el NaCl (podés usar LiI) y explicá por qué esa frase se queda corta.</p>
+    <div class="linea-resp"></div>
+    <div class="linea-resp"></div>
+    <div class="linea-resp"></div>
+  </article>
+
+  <div class="guia-acciones no-print">
+    <button type="button" class="primario" id="btn-imprimir">Imprimir guía</button>
+    <button type="button" class="secundario" id="btn-cerrar">Cerrar</button>
+  </div>
+</section>
+
+<script>
+(function () {
+  "use strict";
+
+  /* Figura 9.5, Chang y Goldsby, Química, 12.ª ed., p. 381.
+     Un valor por elemento. He, Ne, Ar y Rn no figuran.
+     La–Lu es un rango (1,0–1,2): no entra al selector. */
+  var ELEMENTOS = [
+    { s: "H", n: "hidrógeno", p: 1, en: 2.1 },
+    { s: "Li", n: "litio", p: 2, en: 1.0 },
+    { s: "Be", n: "berilio", p: 2, en: 1.5 },
+    { s: "B", n: "boro", p: 2, en: 2.0 },
+    { s: "C", n: "carbono", p: 2, en: 2.5 },
+    { s: "N", n: "nitrógeno", p: 2, en: 3.0 },
+    { s: "O", n: "oxígeno", p: 2, en: 3.5 },
+    { s: "F", n: "flúor", p: 2, en: 4.0 },
+    { s: "Na", n: "sodio", p: 3, en: 0.9 },
+    { s: "Mg", n: "magnesio", p: 3, en: 1.2 },
+    { s: "Al", n: "aluminio", p: 3, en: 1.5 },
+    { s: "Si", n: "silicio", p: 3, en: 1.8 },
+    { s: "P", n: "fósforo", p: 3, en: 2.1 },
+    { s: "S", n: "azufre", p: 3, en: 2.5 },
+    { s: "Cl", n: "cloro", p: 3, en: 3.0 },
+    { s: "K", n: "potasio", p: 4, en: 0.8 },
+    { s: "Ca", n: "calcio", p: 4, en: 1.0 },
+    { s: "Ga", n: "galio", p: 4, en: 1.6 },
+    { s: "Ge", n: "germanio", p: 4, en: 1.8 },
+    { s: "As", n: "arsénico", p: 4, en: 2.0 },
+    { s: "Se", n: "selenio", p: 4, en: 2.4 },
+    { s: "Br", n: "bromo", p: 4, en: 2.8 },
+    { s: "Rb", n: "rubidio", p: 5, en: 0.8 },
+    { s: "Sr", n: "estroncio", p: 5, en: 1.0 },
+    { s: "Sn", n: "estaño", p: 5, en: 1.8 },
+    { s: "Sb", n: "antimonio", p: 5, en: 1.9 },
+    { s: "Te", n: "telurio", p: 5, en: 2.1 },
+    { s: "I", n: "yodo", p: 5, en: 2.5 },
+    { s: "Cs", n: "cesio", p: 6, en: 0.7 },
+    { s: "Ba", n: "bario", p: 6, en: 0.9 },
+    { s: "Tl", n: "talio", p: 6, en: 1.8 },
+    { s: "Pb", n: "plomo", p: 6, en: 1.9 },
+    { s: "Bi", n: "bismuto", p: 6, en: 1.9 },
+    { s: "Po", n: "polonio", p: 6, en: 2.0 },
+    { s: "At", n: "astato", p: 6, en: 2.2 },
+    { s: "Fr", n: "francio", p: 7, en: 0.7 },
+    { s: "Ra", n: "radio", p: 7, en: 0.9 }
+  ];
+
+  /* Figura 9.7, p. 382. Pares rotulados usados en la curva.
+     El CsF está en la figura y no se usa: no se apoya sobre la curva. */
+  var CURVA = [
+    { clave: "Cl|Cl", formula: "Cl₂", d: 0.0, p: 0 },
+    { clave: "Cl|H", formula: "HCl", d: 0.9, p: 18 },
+    { clave: "F|H", formula: "HF", d: 1.9, p: 43 },
+    { clave: "Cl|Na", formula: "NaCl", d: 2.1, p: 73 },
+    { clave: "F|Li", formula: "LiF", d: 3.0, p: 88 }
+  ];
+
+  var EJEMPLOS = [
+    { a: "H", b: "H", nombre: "H₂" },
+    { a: "H", b: "Cl", nombre: "HCl" },
+    { a: "H", b: "F", nombre: "HF" },
+    { a: "Na", b: "Cl", nombre: "NaCl" },
+    { a: "Li", b: "I", nombre: "LiI" }
+  ];
+
+  var DELTA_MAX = 3.3;
+  var REGLA = 2.0;
+  var POR_SIMBOLO = {};
+  ELEMENTOS.forEach(function (e) { POR_SIMBOLO[e.s] = e; });
+
+  var ejemploIdx = -1;
+  var ultimoFoco = null;
+
+  function decimasEN(a, b) {
+    return Math.abs(Math.round(a.en * 10) - Math.round(b.en * 10));
+  }
+  function deltaDe(a, b) { return decimasEN(a, b) / 10; }
+  function coma(n) { return (Math.round(n * 10) / 10).toFixed(1).replace(".", ","); }
+  function clave(a, b) { return [a, b].sort().join("|"); }
+
+  function oscurecer(hex, factor) {
+    var n = parseInt(hex.slice(1), 16);
+    var r = Math.round(((n >> 16) & 255) * factor);
+    var g = Math.round(((n >> 8) & 255) * factor);
+    var b = Math.round((n & 255) * factor);
+    return "#" + [r, g, b].map(function (v) {
+      return v.toString(16).padStart(2, "0");
+    }).join("");
+  }
+
+  var PALETA = ["#1F5C8B", "#2E8B57", "#E07A1F", "#6D4AA8", "#3E6F8E", "#8A6A2F"];
+  var COLOR_FIJO = {
+    H: "#3E7CB0", Li: "#B85C6A", Na: "#B85C6A", K: "#B85C6A", Rb: "#B85C6A", Cs: "#B85C6A", Fr: "#B85C6A",
+    F: "#2E8B57", Cl: "#1F8A70", Br: "#C46B2C", I: "#6D4AA8",
+    O: "#E07A1F", N: "#1F5C8B", C: "#44566B", S: "#C49A2C"
+  };
+
+  function colorDe(sim) {
+    if (COLOR_FIJO[sim]) return COLOR_FIJO[sim];
+    var h = 0;
+    for (var i = 0; i < sim.length; i++) h = (h * 33 + sim.charCodeAt(i)) % PALETA.length;
+    return PALETA[h];
+  }
+
+  /* Hermite monótona entre los puntos de la Figura 9.7. No se muestra el % interpolado. */
+  function pendientes(xs, ys) {
+    var n = xs.length;
+    var h = [];
+    var d = [];
+    var m = new Array(n);
+    var i;
+    for (i = 0; i < n - 1; i++) {
+      h[i] = xs[i + 1] - xs[i];
+      d[i] = (ys[i + 1] - ys[i]) / h[i];
+    }
+    m[0] = d[0];
+    m[n - 1] = d[n - 2];
+    for (i = 1; i < n - 1; i++) {
+      if (d[i - 1] * d[i] <= 0) m[i] = 0;
+      else {
+        var w1 = 2 * h[i] + h[i - 1];
+        var w2 = h[i] + 2 * h[i - 1];
+        m[i] = (w1 + w2) / (w1 / d[i - 1] + w2 / d[i]);
+      }
+    }
+    return m;
+  }
+
+  var XS = CURVA.map(function (c) { return c.d; });
+  var YS = CURVA.map(function (c) { return c.p; });
+  var MS = pendientes(XS, YS);
+
+  function yCurva(x) {
+    if (x < XS[0] || x > XS[XS.length - 1]) return null;
+    var i = 0;
+    while (i < XS.length - 2 && x > XS[i + 1]) i++;
+    var h = XS[i + 1] - XS[i];
+    var t = h === 0 ? 0 : (x - XS[i]) / h;
+    var t2 = t * t;
+    var t3 = t2 * t;
+    var h00 = 2 * t3 - 3 * t2 + 1;
+    var h10 = t3 - 2 * t2 + t;
+    var h01 = -2 * t3 + 3 * t2;
+    var h11 = t3 - t2;
+    return h00 * YS[i] + h10 * h * MS[i] + h01 * YS[i + 1] + h11 * h * MS[i + 1];
+  }
+
+  CURVA.forEach(function (pt) {
+    var y = yCurva(pt.d);
+    if (Math.abs(y - pt.p) > 0.08) console.error("La curva no pasa por", pt.formula, y);
+  });
+
+  var PLOT = { x0: 54, y0: 28, x1: 640, y1: 150 };
+  function xDe(d) { return PLOT.x0 + (d / DELTA_MAX) * (PLOT.x1 - PLOT.x0); }
+  function yDe(p) { return PLOT.y1 - (p / 100) * (PLOT.y1 - PLOT.y0); }
+
+  function montarCurva() {
+    var d = "";
+    var x;
+    for (x = 0; x <= 3.0001; x += 0.05) {
+      var yy = yCurva(Math.min(x, 3));
+      var px = xDe(Math.min(x, 3));
+      var py = yDe(yy);
+      d += (x === 0 ? "M" : "L") + px.toFixed(1) + " " + py.toFixed(1) + " ";
+    }
+    document.getElementById("trazo").setAttribute("d", d);
+    var x20 = xDe(REGLA);
+    document.getElementById("linea20").setAttribute("x1", x20);
+    document.getElementById("linea20").setAttribute("x2", x20);
+    document.getElementById("linea20").setAttribute("y1", PLOT.y0);
+    document.getElementById("linea20").setAttribute("y2", PLOT.y1);
+    document.getElementById("txt20").setAttribute("x", x20 + 4);
+    document.getElementById("txt20").setAttribute("y", PLOT.y0 + 12);
+
+    var g = document.getElementById("puntos-fijos");
+    g.textContent = "";
+    CURVA.forEach(function (pt, idx) {
+      var c = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      c.setAttribute("cx", xDe(pt.d));
+      c.setAttribute("cy", yDe(pt.p));
+      c.setAttribute("r", "4.5");
+      c.setAttribute("fill", "#6D4AA8");
+      g.appendChild(c);
+      var t = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      var arriba = pt.formula !== "NaCl" && pt.formula !== "HCl";
+      t.setAttribute("x", xDe(pt.d));
+      t.setAttribute("y", arriba ? yDe(pt.p) - 10 : yDe(pt.p) + 18);
+      t.setAttribute("text-anchor", "middle");
+      t.setAttribute("fill", "#1E293B");
+      t.setAttribute("font-size", "12");
+      t.setAttribute("font-family", "Arial, Helvetica, sans-serif");
+      t.textContent = pt.formula;
+      g.appendChild(t);
+    });
+  }
+
+  function llenarSelect(select) {
+    var opt0 = document.createElement("option");
+    opt0.value = "";
+    opt0.textContent = "Elegí un elemento";
+    select.appendChild(opt0);
+    var periodo = 0;
+    var grupo = null;
+    ELEMENTOS.forEach(function (e) {
+      if (e.p !== periodo) {
+        periodo = e.p;
+        grupo = document.createElement("optgroup");
+        grupo.label = "Período " + periodo;
+        select.appendChild(grupo);
+      }
+      var op = document.createElement("option");
+      op.value = e.s;
+      op.textContent = e.s + " · " + e.n;
+      grupo.appendChild(op);
+    });
+  }
+
+  function elegido(id) {
+    var v = document.getElementById(id).value;
+    return v ? POR_SIMBOLO[v] : null;
+  }
+
+  function puntoFigura(a, b) {
+    var k = clave(a, b);
+    for (var i = 0; i < CURVA.length; i++) if (CURVA[i].clave === k) return CURVA[i];
+    return null;
+  }
+
+  function vecinos(delta) {
+    var menor = null;
+    var mayor = null;
+    var i;
+    for (i = 0; i < CURVA.length; i++) {
+      if (CURVA[i].d < delta - 0.001) menor = CURVA[i];
+      if (CURVA[i].d > delta + 0.001 && !mayor) mayor = CURVA[i];
+    }
+    if (menor && mayor) {
+      return "Más carácter iónico que el " + menor.formula + ", menos que el " + mayor.formula + ".";
+    }
+    if (mayor) return "Menos carácter iónico que el " + mayor.formula + ".";
+    if (menor) return "Más carácter iónico que el " + menor.formula + ".";
+    return "";
+  }
+
+  function ponerTexto(id, texto) {
+    document.getElementById(id).textContent = texto;
+  }
+
+  function textos(a, b) {
+    if (!a || !b) {
+      return {
+        macro: "Todavía no hay un par. En la guía, la primera pregunta va antes de probar.",
+        sub: "Cuando elijas, vas a ver esferas y una nube. No hay electrones en órbita.",
+        sim: "El ΔEN aparece con los dos valores de la Figura 9.5."
+      };
+    }
+    var delta = deltaDe(a, b);
+    var mas = a.en === b.en ? null : (a.en > b.en ? a : b);
+    var rot = puntoFigura(a.s, b.s);
+    var cuenta = "ΔEN = |" + coma(Math.max(a.en, b.en)) + " − " + coma(Math.min(a.en, b.en)) + "| = " + coma(delta) + ".";
+
+    if (delta === 0) {
+      return {
+        macro: "El conjunto queda neutro. Que la nube no se corra no borra el enlace.",
+        sub: "La nube queda en el medio: los dos átomos atraen el par con la misma fuerza.",
+        sim: rot
+          ? "ΔEN = 0. Figura 9.7: Cl₂, 0 % de carácter iónico."
+          : "ΔEN = 0. La nube no se corre, igual que el Cl₂ en el origen de la curva."
+      };
+    }
+    if (delta >= REGLA) {
+      var simIon = cuenta + " ";
+      if (rot) simIon += "Figura 9.7: " + rot.formula + ", " + rot.p + " % iónico. " + vecinos(delta);
+      else if (decimasEN(a, b) > 30) simIon += "Pasa el LiF, último punto de la curva: no inventamos el %.";
+      else simIon += vecinos(delta) + " Sin % en la Figura 9.7.";
+      return {
+        macro: "Se dibujan como iones, pero el conjunto de los dos sigue neutro.",
+        sub: "La densidad queda del lado del " + mas.s + ". Es el mismo continuo, no otra caja.",
+        sim: simIon.trim()
+      };
+    }
+    var simPol = cuenta + " ";
+    if (rot) simPol += "Figura 9.7: " + rot.formula + ", " + rot.p + " % iónico. " + vecinos(delta);
+    else simPol += vecinos(delta) + " Sin % en la Figura 9.7.";
+    return {
+      macro: "Hay δ+ y δ−, pero el par sigue neutro: polar no es carga neta.",
+      sub: "La nube se corre hacia el " + mas.s + ". El corrimiento es de a poco, sin salto de caja.",
+      sim: simPol.trim()
+    };
+  }
+
+  function pintarEsfera(prefix, color) {
+    document.getElementById(prefix + "Medio").setAttribute("stop-color", color);
+    document.getElementById(prefix + "Borde").setAttribute("stop-color", oscurecer(color, 0.72));
+  }
+
+  function dibujar(a, b) {
+    var esfA = document.getElementById("esfA");
+    var esfB = document.getElementById("esfB");
+    var nube = document.getElementById("nube");
+    var marca = document.getElementById("tira-marca");
+    var punto = document.getElementById("punto-par");
+    var vacio = !a || !b;
+
+    if (vacio) {
+      esfA.setAttribute("cx", 250);
+      esfB.setAttribute("cx", 430);
+      esfA.setAttribute("r", 54);
+      esfB.setAttribute("r", 54);
+      nube.setAttribute("cx", 340);
+      nube.setAttribute("rx", 120);
+      nube.setAttribute("ry", 70);
+      document.getElementById("gradNube").setAttribute("cx", "50%");
+      document.getElementById("nube0").setAttribute("stop-opacity", "0.22");
+      document.getElementById("simA").textContent = "?";
+      document.getElementById("simB").textContent = "?";
+      document.getElementById("simA").setAttribute("x", 250);
+      document.getElementById("simB").setAttribute("x", 430);
+      document.getElementById("marcaA").textContent = "";
+      document.getElementById("marcaB").textContent = "";
+      pintarEsfera("a", "#8AA4B8");
+      pintarEsfera("b", "#8AA4B8");
+      marca.hidden = true;
+      punto.setAttribute("visibility", "hidden");
+      document.getElementById("tira-txt").textContent = "Elegí los dos elementos para ubicar el marcador en la tira.";
+      return;
+    }
+
+    var delta = deltaDe(a, b);
+    var ionico = delta >= REGLA;
+    var dist = 136 + (Math.min(delta, DELTA_MAX) / DELTA_MAX) * 168;
+    var left = 340 - dist / 2;
+    var right = 340 + dist / 2;
+    var r = ionico ? 50 : 54;
+    esfA.setAttribute("cx", left);
+    esfB.setAttribute("cx", right);
+    esfA.setAttribute("r", r);
+    esfB.setAttribute("r", r);
+    document.getElementById("simA").textContent = a.s;
+    document.getElementById("simB").textContent = b.s;
+    document.getElementById("simA").setAttribute("x", left);
+    document.getElementById("simB").setAttribute("x", right);
+    var colA = colorDe(a.s);
+    var colB = colorDe(b.s);
+    if (colA === colB && a.s !== b.s) colB = "#E07A1F";
+    pintarEsfera("a", colA);
+    pintarEsfera("b", colB);
+
+    var dir = 0;
+    if (b.en > a.en) dir = 1;
+    else if (a.en > b.en) dir = -1;
+    var nubeCx;
+    var rx;
+    var ry;
+    if (delta === 0) {
+      nubeCx = 340;
+      rx = dist * 0.62;
+      ry = 74;
+    } else if (ionico) {
+      nubeCx = dir > 0 ? right : left;
+      rx = r * 1.2;
+      ry = r * 1.05;
+    } else {
+      var alcance = (delta / REGLA) * (dist * 0.4);
+      nubeCx = 340 + dir * alcance;
+      rx = dist * 0.5;
+      ry = 78;
+    }
+    nube.setAttribute("cx", nubeCx);
+    nube.setAttribute("rx", rx);
+    nube.setAttribute("ry", ry);
+    var cxGrad = "50%";
+    if (!ionico && dir > 0) cxGrad = "64%";
+    if (!ionico && dir < 0) cxGrad = "36%";
+    document.getElementById("gradNube").setAttribute("cx", cxGrad);
+    document.getElementById("nube0").setAttribute("stop-opacity", delta === 0 ? "0.28" : "0.55");
+
+    var tam = delta === 0 ? 0 : Math.round(18 + Math.min(delta, REGLA) / REGLA * 18);
+    var txtA = "";
+    var txtB = "";
+    var colMarcaA = "#1E293B";
+    var colMarcaB = "#1E293B";
+    if (delta > 0 && !ionico) {
+      txtA = a.en < b.en ? "δ+" : "δ−";
+      txtB = b.en < a.en ? "δ+" : "δ−";
+      if (a.en === b.en) { txtA = ""; txtB = ""; }
+    } else if (ionico) {
+      txtA = a.en < b.en ? "+" : "−";
+      txtB = b.en < a.en ? "+" : "−";
+    }
+    if (txtA === "δ+" || txtA === "+") colMarcaA = "#1F5C8B";
+    if (txtA === "δ−" || txtA === "−") colMarcaA = "#6D4AA8";
+    if (txtB === "δ+" || txtB === "+") colMarcaB = "#1F5C8B";
+    if (txtB === "δ−" || txtB === "−") colMarcaB = "#6D4AA8";
+    var mA = document.getElementById("marcaA");
+    var mB = document.getElementById("marcaB");
+    mA.textContent = txtA;
+    mB.textContent = txtB;
+    mA.setAttribute("fill", colMarcaA);
+    mB.setAttribute("fill", colMarcaB);
+    mA.setAttribute("x", left);
+    mB.setAttribute("x", right);
+    mA.setAttribute("font-size", tam || 16);
+    mB.setAttribute("font-size", tam || 16);
+    mA.setAttribute("y", 118 - r - 14);
+    mB.setAttribute("y", 118 - r - 14);
+
+    marca.hidden = false;
+    marca.style.left = (Math.min(delta, DELTA_MAX) / DELTA_MAX * 100) + "%";
+    document.getElementById("tira-txt").textContent = ionico
+      ? "ΔEN = " + coma(delta) + ". Llegó a la regla práctica ≈ 2,0: el dibujo pasa a iones, la tira no se corta."
+      : "ΔEN = " + coma(delta) + ". El marcador se mueve sin saltos. La línea ≈ 2,0 no parte la tira.";
+
+    var rotP = puntoFigura(a.s, b.s);
+    if (decimasEN(a, b) <= 30) {
+      var dPlot = rotP ? rotP.d : delta;
+      var y = rotP ? rotP.p : yCurva(dPlot);
+      punto.setAttribute("cx", xDe(dPlot));
+      punto.setAttribute("cy", yDe(y));
+      punto.setAttribute("visibility", "visible");
+      punto.setAttribute("fill", rotP ? "#E07A1F" : "#fff");
+      punto.setAttribute("stroke", "#E07A1F");
+    } else {
+      punto.setAttribute("visibility", "hidden");
+    }
+  }
+
+  function actualizar() {
+    var a = elegido("sel-a");
+    var b = elegido("sel-b");
+    var t = textos(a, b);
+    ponerTexto("t-macro", t.macro);
+    ponerTexto("t-sub", t.sub);
+    ponerTexto("t-sim", t.sim);
+    dibujar(a, b);
+  }
+
+  function setPar(sa, sb) {
+    document.getElementById("sel-a").value = sa;
+    document.getElementById("sel-b").value = sb;
+    actualizar();
+  }
+
+  function abrirGuia() {
+    ultimoFoco = document.activeElement;
+    document.getElementById("guia").hidden = false;
+    document.getElementById("scrim").hidden = false;
+    document.getElementById("btn-guia").setAttribute("aria-expanded", "true");
+    document.getElementById("btn-cerrar").focus();
+  }
+
+  function cerrarGuia() {
+    document.getElementById("guia").hidden = true;
+    document.getElementById("scrim").hidden = true;
+    document.getElementById("btn-guia").setAttribute("aria-expanded", "false");
+    if (ultimoFoco && ultimoFoco.focus) ultimoFoco.focus();
+  }
+
+  llenarSelect(document.getElementById("sel-a"));
+  llenarSelect(document.getElementById("sel-b"));
+  montarCurva();
+  actualizar();
+
+  document.getElementById("sel-a").addEventListener("change", function () {
+    ejemploIdx = -1;
+    document.getElementById("ejemplo-ahora").textContent = "";
+    actualizar();
+  });
+  document.getElementById("sel-b").addEventListener("change", function () {
+    ejemploIdx = -1;
+    document.getElementById("ejemplo-ahora").textContent = "";
+    actualizar();
+  });
+  document.getElementById("btn-swap").addEventListener("click", function () {
+    var a = document.getElementById("sel-a").value;
+    var b = document.getElementById("sel-b").value;
+    document.getElementById("sel-a").value = b;
+    document.getElementById("sel-b").value = a;
+    actualizar();
+  });
+  document.getElementById("btn-ejemplos").addEventListener("click", function () {
+    ejemploIdx = (ejemploIdx + 1) % EJEMPLOS.length;
+    var ej = EJEMPLOS[ejemploIdx];
+    setPar(ej.a, ej.b);
+    document.getElementById("ejemplo-ahora").textContent = "Ejemplo en pantalla: " + ej.nombre + ".";
+  });
+  document.getElementById("btn-reiniciar").addEventListener("click", function () {
+    ejemploIdx = -1;
+    document.getElementById("sel-a").value = "";
+    document.getElementById("sel-b").value = "";
+    document.getElementById("ejemplo-ahora").textContent = "";
+    actualizar();
+    document.getElementById("sel-a").focus();
+  });
+  document.getElementById("btn-guia").addEventListener("click", abrirGuia);
+  document.getElementById("btn-cerrar").addEventListener("click", cerrarGuia);
+  document.getElementById("scrim").addEventListener("click", cerrarGuia);
+  document.getElementById("btn-imprimir").addEventListener("click", function () { window.print(); });
+  document.addEventListener("keydown", function (ev) {
+    var guia = document.getElementById("guia");
+    if (guia.hidden) return;
+    if (ev.key === "Escape") {
+      ev.preventDefault();
+      cerrarGuia();
+      return;
+    }
+    if (ev.key !== "Tab") return;
+    var focos = guia.querySelectorAll("button, [href], input, select, textarea");
+    if (!focos.length) return;
+    var primero = focos[0];
+    var ultimo = focos[focos.length - 1];
+    if (ev.shiftKey && document.activeElement === primero) {
+      ev.preventDefault();
+      ultimo.focus();
+    } else if (!ev.shiftKey && document.activeElement === ultimo) {
+      ev.preventDefault();
+      primero.focus();
+    }
+  });
+})();
+</script>
+</body>
+</html>
+<!--
+Datos usados. Fuente: Chang y Goldsby, Química, 12.ª ed.
+No había un archivo valores-chang.json suelto en el proyecto. Los números se
+leyeron de CAP9.pdf (el capítulo adjunto), que es la misma fuente que la clase
+cita como Figura 9.5 / Figura 9.7 (valores-chang.json en los apuntes).
+
+Figura 9.5, p. 381 — electronegatividad (sin unidad). Selector: solo estos.
+H 2,1
+Li 1,0  Be 1,5  B 2,0  C 2,5  N 3,0  O 3,5  F 4,0
+Na 0,9  Mg 1,2  Al 1,5  Si 1,8  P 2,1  S 2,5  Cl 3,0
+K 0,8  Ca 1,0  Sc 1,3  Ti 1,5  V 1,6  Cr 1,6  Mn 1,5  Fe 1,8  Co 1,9  Ni 1,9  Cu 1,9  Zn 1,6  Ga 1,6  Ge 1,8  As 2,0  Se 2,4  Br 2,8  Kr 3,0
+Fr 0,7  Ra 0,9
+Omitidos: He, Ne, Ar, Rn (no están en la figura). La–Lu solo trae el rango 1,0–1,2, no un valor por elemento.
+
+Figura 9.7, p. 382 — pares rotulados que SÍ se marcan en la curva
+(ΔEN calculado con la Figura 9.5; % leído en la figura, misma lectura que la clase 07):
+Cl₂   ΔEN 0,0   0 %
+HCl   ΔEN 0,9   18 %
+HF    ΔEN 1,9   43 %
+NaCl  ΔEN 2,1   73 %
+LiF   ΔEN 3,0   88 %
+NO USADO en la curva, por consigna: CsF (está rotulado en la Figura 9.7; no se apoya el punto).
+El eje llega a 3,3 porque ese es el extremo de la figura, no porque se grafique el CsF.
+Regla práctica ≈ 2,0: texto del Chang, p. 382 («2,0 o más… para la mayoría pero no para todos»).
+No se interpola un % para mostrarlo: el círculo vacío solo ubica el ΔEN entre los puntos rotulados.
+Ejemplos: H₂, HCl, HF, NaCl, LiI. LiI usa Li 1,0 e I 2,5 (Figura 9.5); no tiene % en la Figura 9.7.
+-->

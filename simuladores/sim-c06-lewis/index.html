@@ -1,1 +1,1968 @@
-$file:/workspace/simuladores-uniones/simuladores/sim-c06-lewis/index.html
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Constructor de Lewis · Simulador de Química</title>
+    <meta name="description" content="Simulador interactivo de estructuras de Lewis y uniones químicas para estudiantes de secundaria." />
+    <meta property="og:title" content="Constructor de Lewis · Simulador de Química" />
+    <meta property="og:description" content="Simulador interactivo de estructuras de Lewis y uniones químicas para estudiantes de secundaria." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <style>
+      /* Variables y reseteo base */
+      :root {
+        --color-bg: #FFFFFF;
+        --color-title: #1F5C8B;
+        --color-text: #1E293B;
+        --color-accent: #E07A1F;
+        --color-success: #2E8B57;
+        --color-error: #C0392B;
+        --color-panel: #EEF4F9;
+        --color-border: #D8E2EC;
+        --color-notice-bg: #FFF4EA;
+        --color-notice-border: #F7D4B2;
+        --color-submicro: #6D4AA8;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: Arial, Helvetica, sans-serif;
+        background-color: var(--color-bg);
+        color: var(--color-text);
+        line-height: 1.5;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* Barra azul superior de 6px */
+      .top-accent-bar {
+        height: 6px;
+        background-color: var(--color-title);
+        width: 100%;
+        flex-shrink: 0;
+      }
+
+      /* Contenedor principal con mucho aire */
+      .app-container {
+        max-width: 1280px;
+        width: 100%;
+        margin: 0 auto;
+        padding: 20px 24px 40px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        flex: 1;
+      }
+
+      /* Encabezado */
+      header {
+        border-bottom: 1px solid var(--color-border);
+        padding-bottom: 16px;
+      }
+
+      .kicker {
+        color: var(--color-accent);
+        font-size: 13px;
+        font-weight: bold;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        margin-bottom: 4px;
+        display: block;
+      }
+
+      h1 {
+        color: var(--color-title);
+        font-size: 26px;
+        font-weight: bold;
+        line-height: 1.25;
+        margin-bottom: 6px;
+      }
+
+      .tagline {
+        color: var(--color-text);
+        font-size: 15px;
+        opacity: 0.9;
+      }
+
+      /* Barra de navegación de moléculas */
+      .selector-bar {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        background-color: var(--color-panel);
+        padding: 12px 16px;
+        border-radius: 14px;
+        border: 1px solid var(--color-border);
+      }
+
+      .selector-label {
+        font-size: 14px;
+        font-weight: bold;
+        color: var(--color-title);
+        white-space: nowrap;
+      }
+
+      .mol-buttons {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .mol-btn {
+        min-height: 44px;
+        min-width: 52px;
+        padding: 8px 14px;
+        font-size: 15px;
+        font-weight: bold;
+        font-family: Arial, sans-serif;
+        border-radius: 12px;
+        border: 1.5px solid var(--color-border);
+        background: #FFFFFF;
+        color: var(--color-text);
+        cursor: pointer;
+        transition: all 0.15s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .mol-btn:hover {
+        border-color: var(--color-title);
+        background-color: #F8FAFC;
+      }
+
+      .mol-btn.active {
+        background-color: var(--color-title);
+        color: #FFFFFF;
+        border-color: var(--color-title);
+      }
+
+      .mol-btn:focus-visible {
+        outline: 3px solid var(--color-accent);
+        outline-offset: 2px;
+      }
+
+      /* Cuadrícula principal de trabajo (simulador a la izq, controles a la der) */
+      .workspace {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+
+      @media (min-width: 960px) {
+        .workspace {
+          grid-template-columns: 1.35fr 1fr;
+          align-items: start;
+        }
+      }
+
+      /* Zona de simulación (Izquierda / Arriba) */
+      .stage-card {
+        background-color: var(--color-panel);
+        border: 1px solid var(--color-border);
+        border-radius: 16px;
+        padding: 18px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .stage-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .stage-title {
+        font-size: 16px;
+        font-weight: bold;
+        color: var(--color-title);
+      }
+
+      .stage-instructions {
+        font-size: 13px;
+        color: #475569;
+      }
+
+      /* Canvas SVG interactivo */
+      .canvas-container {
+        width: 100%;
+        background-color: #FFFFFF;
+        border-radius: 14px;
+        border: 1px solid var(--color-border);
+        overflow: hidden;
+        position: relative;
+        touch-action: manipulation;
+        box-shadow: inset 0 1px 3px rgba(0,0,0,0.02);
+      }
+
+      svg#mol-stage {
+        display: block;
+        width: 100%;
+        height: auto;
+        min-height: 290px;
+        max-height: 380px;
+      }
+
+      /* Elementos interactivos SVG */
+      .interactive-spot {
+        cursor: pointer;
+        transition: opacity 0.15s ease;
+      }
+
+      .interactive-spot:hover {
+        opacity: 0.85;
+      }
+
+      .interactive-spot:focus {
+        outline: none;
+      }
+
+      /* Leyenda de lectura rápida */
+      .stage-legend {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+        font-size: 13px;
+        color: #475569;
+        background: #FFFFFF;
+        padding: 8px 14px;
+        border-radius: 10px;
+        border: 1px solid var(--color-border);
+      }
+
+      .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .legend-dash {
+        display: inline-block;
+        width: 16px;
+        height: 3px;
+        background: var(--color-title);
+        border-radius: 2px;
+      }
+
+      .legend-dots {
+        letter-spacing: 2px;
+        font-weight: bold;
+        font-size: 15px;
+        color: var(--color-text);
+      }
+
+      .legend-ring {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        border: 2.5px solid var(--color-success);
+      }
+
+      /* Panel de controles (Derecha / Abajo) */
+      .controls-card {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      /* Paso 1: Electrones de valencia */
+      .panel-block {
+        background-color: #FFFFFF;
+        border: 1px solid var(--color-border);
+        border-radius: 16px;
+        padding: 18px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .panel-block-title {
+        font-size: 15px;
+        font-weight: bold;
+        color: var(--color-title);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .valence-input-group {
+        display: flex;
+        gap: 10px;
+        align-items: stretch;
+      }
+
+      .valence-input {
+        min-height: 44px;
+        width: 100px;
+        font-size: 18px;
+        font-weight: bold;
+        text-align: center;
+        border: 1.5px solid var(--color-border);
+        border-radius: 12px;
+        color: var(--color-text);
+        padding: 6px;
+        background: #FFFFFF;
+      }
+
+      .valence-input:focus {
+        border-color: var(--color-title);
+        outline: 3px solid #BFDBFE;
+      }
+
+      .valence-input:disabled {
+        background-color: var(--color-panel);
+        color: #64748B;
+        cursor: not-allowed;
+      }
+
+      /* Botones de acción */
+      .btn {
+        min-height: 44px;
+        padding: 10px 18px;
+        font-size: 15px;
+        font-weight: bold;
+        font-family: Arial, sans-serif;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        text-decoration: none;
+      }
+
+      .btn:focus-visible {
+        outline: 3px solid var(--color-accent);
+        outline-offset: 2px;
+      }
+
+      .btn-primary {
+        background-color: var(--color-title);
+        color: #FFFFFF;
+        border: 1.5px solid var(--color-title);
+      }
+
+      .btn-primary:hover {
+        background-color: #17486E;
+        border-color: #17486E;
+      }
+
+      .btn-primary:disabled {
+        background-color: #94A3B8;
+        border-color: #94A3B8;
+        cursor: not-allowed;
+      }
+
+      .btn-secondary {
+        background-color: #FFFFFF;
+        color: var(--color-title);
+        border: 1.5px solid var(--color-title);
+      }
+
+      .btn-secondary:hover {
+        background-color: var(--color-panel);
+      }
+
+      .btn-secondary:disabled {
+        border-color: #CBD5E1;
+        color: #94A3B8;
+        cursor: not-allowed;
+      }
+
+      .btn-group {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      /* Panel de balance de electrones */
+      .balance-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        background: var(--color-panel);
+        padding: 12px;
+        border-radius: 12px;
+        border: 1px solid var(--color-border);
+      }
+
+      .balance-item {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .balance-label {
+        font-size: 12px;
+        color: #64748B;
+        font-weight: 600;
+      }
+
+      .balance-value {
+        font-size: 18px;
+        font-weight: bold;
+        font-variant-numeric: tabular-nums;
+        color: var(--color-text);
+      }
+
+      .balance-value.over {
+        color: var(--color-error);
+      }
+
+      .balance-value.complete {
+        color: var(--color-success);
+      }
+
+      /* Mensaje de retroalimentación (máx 2 líneas) */
+      .feedback-box {
+        min-height: 52px;
+        padding: 10px 14px;
+        border-radius: 12px;
+        font-size: 14px;
+        line-height: 1.4;
+        display: flex;
+        align-items: center;
+        background-color: #F8FAFC;
+        border: 1px solid var(--color-border);
+      }
+
+      .feedback-box.error {
+        background-color: #FEF2F2;
+        border-color: #FECACA;
+        color: var(--color-error);
+        font-weight: 500;
+      }
+
+      .feedback-box.success {
+        background-color: #F0FDF4;
+        border-color: #BBF7D0;
+        color: var(--color-success);
+        font-weight: 500;
+      }
+
+      .feedback-box.info {
+        background-color: #EFF6FF;
+        border-color: #BFDBFE;
+        color: var(--color-title);
+      }
+
+      /* Panel "Qué estás viendo" */
+      .what-you-see-panel {
+        background-color: var(--color-notice-bg);
+        border: 1px solid var(--color-notice-border);
+        border-radius: 16px;
+        padding: 16px 18px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .what-you-see-title {
+        font-size: 15px;
+        font-weight: bold;
+        color: var(--color-title);
+      }
+
+      .triplet-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        font-size: 14px;
+      }
+
+      .triplet-row {
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+      }
+
+      .triplet-badge {
+        font-size: 11px;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 2px 7px;
+        border-radius: 6px;
+        flex-shrink: 0;
+        color: #FFFFFF;
+      }
+
+      .badge-macro {
+        background-color: var(--color-success);
+      }
+
+      .badge-submicro {
+        background-color: var(--color-submicro);
+      }
+
+      .badge-symbolic {
+        background-color: var(--color-accent);
+      }
+
+      .triplet-text {
+        color: var(--color-text);
+        line-height: 1.4;
+      }
+
+      /* Modal de Guía de Trabajo */
+      .modal-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(15, 23, 42, 0.65);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        z-index: 1000;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s ease;
+      }
+
+      .modal-backdrop.open {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      .modal-card {
+        background: #FFFFFF;
+        border-radius: 18px;
+        max-width: 720px;
+        width: 100%;
+        max-height: 90vh;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+        overflow: hidden;
+      }
+
+      .modal-header {
+        padding: 18px 24px;
+        border-bottom: 1px solid var(--color-border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background-color: var(--color-panel);
+      }
+
+      .modal-title {
+        font-size: 18px;
+        font-weight: bold;
+        color: var(--color-title);
+      }
+
+      .modal-close-btn {
+        background: none;
+        border: none;
+        font-size: 24px;
+        color: #64748B;
+        cursor: pointer;
+        width: 44px;
+        height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+      }
+
+      .modal-close-btn:hover {
+        background: #E2E8F0;
+        color: var(--color-text);
+      }
+
+      .modal-body {
+        padding: 20px 24px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+      }
+
+      .guide-question {
+        background: #F8FAFC;
+        border: 1px solid var(--color-border);
+        border-radius: 12px;
+        padding: 14px 16px;
+      }
+
+      .guide-q-title {
+        font-size: 14px;
+        font-weight: bold;
+        color: var(--color-title);
+        margin-bottom: 4px;
+      }
+
+      .guide-q-prompt {
+        font-size: 14px;
+        color: var(--color-text);
+        margin-bottom: 10px;
+      }
+
+      .guide-q-input {
+        width: 100%;
+        min-height: 64px;
+        padding: 8px 12px;
+        border-radius: 8px;
+        border: 1px solid var(--color-border);
+        font-family: Arial, sans-serif;
+        font-size: 14px;
+        resize: vertical;
+      }
+
+      .guide-q-input:focus {
+        outline: 2px solid var(--color-title);
+        border-color: var(--color-title);
+      }
+
+      .modal-footer {
+        padding: 14px 24px;
+        border-top: 1px solid var(--color-border);
+        background: #F8FAFC;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      /* Accesibilidad: Respetar prefers-reduced-motion */
+      @media (prefers-reduced-motion: reduce) {
+        *, ::before, ::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+          scroll-behavior: auto !important;
+        }
+      }
+
+      /* Formato para impresión (@media print) */
+      @media print {
+        body {
+          background: #FFFFFF !important;
+          color: #000000 !important;
+        }
+
+        .top-accent-bar,
+        .selector-bar,
+        .stage-card,
+        .controls-card,
+        .what-you-see-panel,
+        .modal-header .modal-close-btn,
+        .modal-footer {
+          display: none !important;
+        }
+
+        .modal-backdrop {
+          position: static !important;
+          background: none !important;
+          padding: 0 !important;
+          opacity: 1 !important;
+          pointer-events: auto !important;
+        }
+
+        .modal-card {
+          box-shadow: none !important;
+          max-width: 100% !important;
+          border: none !important;
+        }
+
+        .modal-body {
+          padding: 0 !important;
+          overflow: visible !important;
+        }
+
+        .guide-question {
+          border: 1px solid #94A3B8 !important;
+          background: #FFFFFF !important;
+          page-break-inside: avoid;
+          margin-bottom: 16px;
+        }
+
+        .guide-q-input {
+          border: 1px dashed #64748B !important;
+          min-height: 80px;
+        }
+
+        .print-only-header {
+          display: block !important;
+          margin-bottom: 20px;
+          border-bottom: 2px solid #1F5C8B;
+          padding-bottom: 10px;
+        }
+      }
+
+      .print-only-header {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Barra superior de 6px azul -->
+    <div class="top-accent-bar" aria-hidden="true"></div>
+
+    <div class="app-container">
+      <!-- Encabezado con rótulo versalita naranja y título azul -->
+      <header>
+        <span class="kicker">QUÍMICA 5.º · UNIONES QUÍMICAS · CLASE 06</span>
+        <h1>Constructor de Estructuras de Lewis</h1>
+        <p class="tagline">Determiná los electrones de valencia y construí el esqueleto compartiendo pares y ubicando los pares libres.</p>
+      </header>
+
+      <!-- Selector de Moléculas -->
+      <nav class="selector-bar" aria-label="Selección de molécula para practicar">
+        <span class="selector-label">Elegí la molécula:</span>
+        <div class="mol-buttons" id="mol-selector-buttons" role="tablist">
+          <!-- Botones inyectados dinámicamente -->
+        </div>
+      </nav>
+
+      <!-- Cuadrícula de Trabajo -->
+      <main class="workspace">
+        <!-- Zona Izquierda: Simulación SVG interactiva -->
+        <section class="stage-card" aria-label="Espacio de construcción de la estructura de Lewis">
+          <div class="stage-header">
+            <div>
+              <div class="stage-title" id="stage-mol-title">Molécula: Agua (H₂O)</div>
+              <div class="stage-instructions" id="stage-mol-subtext">Paso 1: Ingresá el total de electrones de valencia en el panel de control.</div>
+            </div>
+            <div id="stage-status-badge" style="font-size: 13px; font-weight: bold; color: var(--color-title);">
+              Paso 1: Cálculo previo
+            </div>
+          </div>
+
+          <!-- Contenedor del Canvas SVG -->
+          <div class="canvas-container">
+            <svg id="mol-stage" viewBox="0 0 540 340" role="img" aria-label="Representación de átomos y enlaces de Lewis">
+              <defs>
+                <!-- Sombras y gradientes para esferas atómicas limpias (NUNCA órbitas) -->
+                <radialGradient id="grad-H" cx="35%" cy="35%" r="65%">
+                  <stop offset="0%" stop-color="#FFFFFF" />
+                  <stop offset="70%" stop-color="#E2E8F0" />
+                  <stop offset="100%" stop-color="#CBD5E1" />
+                </radialGradient>
+                <radialGradient id="grad-O" cx="35%" cy="35%" r="65%">
+                  <stop offset="0%" stop-color="#F87171" />
+                  <stop offset="70%" stop-color="#EF4444" />
+                  <stop offset="100%" stop-color="#B91C1C" />
+                </radialGradient>
+                <radialGradient id="grad-C" cx="35%" cy="35%" r="65%">
+                  <stop offset="0%" stop-color="#64748B" />
+                  <stop offset="70%" stop-color="#475569" />
+                  <stop offset="100%" stop-color="#1E293B" />
+                </radialGradient>
+                <radialGradient id="grad-N" cx="35%" cy="35%" r="65%">
+                  <stop offset="0%" stop-color="#60A5FA" />
+                  <stop offset="70%" stop-color="#3B82F6" />
+                  <stop offset="100%" stop-color="#1D4ED8" />
+                </radialGradient>
+                <radialGradient id="grad-Cl" cx="35%" cy="35%" r="65%">
+                  <stop offset="0%" stop-color="#34D399" />
+                  <stop offset="70%" stop-color="#10B981" />
+                  <stop offset="100%" stop-color="#047857" />
+                </radialGradient>
+                <!-- Filtro de sombra suave -->
+                <filter id="soft-shadow" x="-10%" y="-10%" width="120%" height="120%">
+                  <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.12" />
+                </filter>
+              </defs>
+              <!-- Enlaces interactivos -->
+              <g id="bonds-layer"></g>
+              <!-- Átomos (esferas y anillos de octeto/dueto) -->
+              <g id="atoms-layer"></g>
+              <!-- Pares solitarios (dos puntos) interactivos -->
+              <g id="lone-pairs-layer"></g>
+            </svg>
+          </div>
+
+          <!-- Leyenda de simbología -->
+          <div class="stage-legend">
+            <div class="legend-item">
+              <span class="legend-dash"></span>
+              <span>1 guion = 2 e⁻ compartidos</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-dots">··</span>
+              <span>2 puntos = 2 e⁻ libres (par solitario)</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-ring"></span>
+              <span>Anillo verde = capa completa (2 para H, 8 el resto)</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Zona Derecha: Panel de Controles y Devolución -->
+        <section class="controls-card" aria-label="Controles del simulador">
+          <!-- Bloque de Paso 1: Electrones de Valencia -->
+          <div class="panel-block" id="step1-card">
+            <div class="panel-block-title">
+              <span>1. Total de electrones de valencia</span>
+              <span id="step1-indicator" style="font-size: 13px; color: #64748B;">Obligatorio</span>
+            </div>
+            <p id="valence-hint" style="font-size: 13px; color: #475569;">
+              Consultá los grupos de cada átomo y calculá cuántos electrones de valencia aporta la molécula:
+            </p>
+            <div id="atom-valence-guide" style="font-size: 13px; background: var(--color-panel); padding: 8px 12px; border-radius: 8px; border: 1px solid var(--color-border); color: #334155;">
+              <!-- Guía de grupos inyectada -->
+            </div>
+            <div class="valence-input-group">
+              <label for="valence-count-input" class="sr-only" style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0;">Total de electrones de valencia</label>
+              <input type="number" id="valence-count-input" class="valence-input" min="1" max="40" placeholder="¿Total?" aria-label="Ingresá el número total de electrones de valencia" />
+              <button type="button" id="confirm-valence-btn" class="btn btn-primary" style="flex: 1;">Confirmar total</button>
+            </div>
+          </div>
+
+          <!-- Bloque de Paso 2: Balance de Electrones y Verificación -->
+          <div class="panel-block" id="step2-card">
+            <div class="panel-block-title">
+              <span>2. Balance de electrones en el esqueleto</span>
+              <span id="step2-status" style="font-size: 12px; font-weight: bold; color: #64748B;">Bloqueado</span>
+            </div>
+
+            <div class="balance-grid">
+              <div class="balance-item">
+                <span class="balance-label">Electrones usados</span>
+                <span class="balance-value" id="val-used">0</span>
+              </div>
+              <div class="balance-item">
+                <span class="balance-label">Electrones disponibles</span>
+                <span class="balance-value" id="val-total">—</span>
+              </div>
+              <div class="balance-item">
+                <span class="balance-label">Pares compartidos (enlaces)</span>
+                <span class="balance-value" id="val-bonds">0 (0 e⁻)</span>
+              </div>
+              <div class="balance-item">
+                <span class="balance-label">Pares libres (no enlazantes)</span>
+                <span class="balance-value" id="val-lone">0 (0 e⁻)</span>
+              </div>
+            </div>
+
+            <!-- Caja de Devolución pedagógica (máximo 2 líneas) -->
+            <div id="feedback-display" class="feedback-box info" role="status" aria-live="polite">
+              Primero determiná los electrones de valencia para habilitar la construcción.
+            </div>
+
+            <div class="btn-group">
+              <button type="button" id="verify-btn" class="btn btn-primary" style="flex: 1;" disabled>Verificar estructura</button>
+              <button type="button" id="reset-btn" class="btn btn-secondary" title="Borrar enlaces y pares libres para empezar de nuevo">Reiniciar</button>
+              <button type="button" id="open-guide-btn" class="btn btn-secondary" title="Ver preguntas de la clase">Guía de trabajo</button>
+            </div>
+          </div>
+
+          <!-- Panel "Qué estás viendo" con triplet pedagógico (Macro / Submicro / Simbólico) -->
+          <div class="what-you-see-panel" aria-label="Qué estás viendo en los tres niveles de representación">
+            <div class="what-you-see-title">Qué estás viendo</div>
+            <div class="triplet-list">
+              <div class="triplet-row">
+                <span class="triplet-badge badge-macro">Macro</span>
+                <span class="triplet-text" id="view-macro">Gas incoloro que compone el agua.</span>
+              </div>
+              <div class="triplet-row">
+                <span class="triplet-badge badge-submicro">Submicro</span>
+                <span class="triplet-text" id="view-submicro">Átomos representados como esferas fijas. Tocar entre ellos para compartir electrones.</span>
+              </div>
+              <div class="triplet-row">
+                <span class="triplet-badge badge-symbolic">Simbólico</span>
+                <span class="triplet-text" id="view-symbolic">Fórmula: H₂O · Lewis: sin enlaces colocados aún.</span>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <!-- Modal de Guía de Trabajo (Imprimible con @media print) -->
+    <div id="guide-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="guide-title">
+      <div class="modal-card">
+        <div class="print-only-header">
+          <h2 style="font-size: 20px; color: #1F5C8B; margin-bottom: 4px;">QUÍMICA 5.º AÑO · CLASE 06: UNIONES QUÍMICAS Y ESTRUCTURAS DE LEWIS</h2>
+          <p style="font-size: 14px; color: #334155;">Nombre y apellido: ____________________________________ Fecha: ____________ División: ______</p>
+        </div>
+        <div class="modal-header">
+          <div class="modal-title" id="guide-title">Guía de Trabajo · Clase 06: Estructuras de Lewis</div>
+          <button type="button" class="modal-close-btn" id="close-guide-btn" aria-label="Cerrar guía de trabajo">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p style="font-size: 14px; color: #475569; margin-bottom: 4px;">
+            Respondé a las siguientes consignas reflexionando sobre lo observado en el simulador. Podés escribir acá tus respuestas o imprimir la ficha para tu carpeta.
+          </p>
+
+          <!-- 1. Pregunta de Predicción ANTES de tocar -->
+          <div class="guide-question">
+            <div class="guide-q-title">1. Predicción (Antes de construir en el simulador)</div>
+            <div class="guide-q-prompt">¿Cuántos pares libres creés que tiene el átomo de oxígeno en la molécula de agua (H₂O)? Anotá tu predicción y explicá en qué te basás antes de verificarla.</div>
+            <textarea class="guide-q-input" placeholder="Escribí acá tu predicción..."></textarea>
+          </div>
+
+          <!-- 2. Observación 1: Dueto vs Octeto -->
+          <div class="guide-question">
+            <div class="guide-q-title">2. Observación: Hidrógeno y la regla del dueto</div>
+            <div class="guide-q-prompt">Al armar moléculas con hidrógeno (como H₂, HCl, H₂O, NH₃ o CH₄), ¿con cuántos electrones compartidos se pone verde el anillo del hidrógeno? ¿Lleva alguna vez pares de puntos (pares libres)?</div>
+            <textarea class="guide-q-input" placeholder="Describí lo que observaste en el simulador..."></textarea>
+          </div>
+
+          <!-- 3. Observación 2: El Carbono en CO2 -->
+          <div class="guide-question">
+            <div class="guide-q-title">3. Observación: Enlaces dobles en el CO₂</div>
+            <div class="guide-q-prompt">En el dióxido de carbono (CO₂), si colocás enlaces simples entre el C y los dos O, ¿con cuántos electrones queda el carbono? ¿Qué tuviste que hacer para que el anillo del carbono se pusiera verde?</div>
+            <textarea class="guide-q-input" placeholder="Explicá cómo lograste que el carbono y los oxígenos completen 8 electrones..."></textarea>
+          </div>
+
+          <!-- 4. Explicación conceptual -->
+          <div class="guide-question">
+            <div class="guide-q-title">4. Explicación: ¿Por qué el H no lleva 8?</div>
+            <div class="guide-q-prompt">¿Por qué el hidrógeno se satura con solo 2 electrones (regla del dueto) mientras que el cloro, el oxígeno y el nitrógeno requieren 8 electrones (regla del octeto)? Relacionalo con el gas noble más cercano en la Tabla Periódica.</div>
+            <textarea class="guide-q-input" placeholder="Justificá según los niveles de energía y gases nobles..."></textarea>
+          </div>
+
+          <!-- 5. Transferencia: N2 -->
+          <div class="guide-question">
+            <div class="guide-q-title">5. Transferencia: La molécula de N₂</div>
+            <div class="guide-q-prompt">Armá la estructura de Lewis del dinitrógeno (N₂). ¿Qué tipo de enlace une a los dos nitrógenos (simple, doble o triple)? ¿Por qué esta unión hace que el N₂ sea un gas prácticamente inerte y poco reactivo en la atmósfera?</div>
+            <textarea class="guide-q-input" placeholder="Describí el enlace del N2 y su estabilidad química..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" id="print-guide-btn" class="btn btn-secondary">
+            🖨️ Imprimir guía de trabajo
+          </button>
+          <button type="button" id="done-guide-btn" class="btn btn-primary">
+            Cerrar y volver al simulador
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Script Vanilla Autónomo (Sin frameworks, sin dependencias externas) -->
+    <script>
+      (function() {
+        "use strict";
+
+        /*
+          Base de datos curricular de moléculas (Chang, 12.ª ed.):
+          - Electrones de valencia: Grupo 1 (H = 1), Grupo 14 (C = 4), Grupo 15 (N = 5),
+            Grupo 16 (O = 6), Grupo 17 (Cl = 7).
+          - Electronegatividad (Pauling): H=2.1, C=2.5, N=3.0, Cl=3.0, O=3.5.
+          - Regla práctica: ΔEN continua; criterio "≈ 2,0 como regla práctica, con excepciones".
+        */
+        const MOLECULES = {
+          H2: {
+            name: "Hidrógeno",
+            formula: "H₂",
+            formulaHtml: "H<sub>2</sub>",
+            atoms: [
+              { id: "H1", symbol: "H", x: 200, y: 170, r: 36, target: 2, group: 1, valence: 1, colorGrad: "grad-H", textColor: "#1E293B", allowLonePairs: true,
+                lpSpots: [
+                  { id: "top", dx: 0, dy: -52, label: "arriba" }
+                ]
+              },
+              { id: "H2", symbol: "H", x: 340, y: 170, r: 36, target: 2, group: 1, valence: 1, colorGrad: "grad-H", textColor: "#1E293B", allowLonePairs: true,
+                lpSpots: [
+                  { id: "top", dx: 0, dy: -52, label: "arriba" }
+                ]
+              }
+            ],
+            bonds: [
+              { id: "b-0-1", u: 0, v: 1, max: 1, current: 0, target: 1 }
+            ],
+            totalValence: 2,
+            valenceHint: "2 átomos de H (grupo 1A): 2 × 1 = 2 electrones de valencia.",
+            macro: "Gas diatómico incoloro, inodoro e inflamable. Es el elemento químico más abundante del universo.",
+            submicro: "Dos núcleos de hidrógeno comparten su único electrón formando un enlace covalente simple (dueto completo).",
+            symbolic: "H₂ · H—H · 2 electrones compartidos en 1 enlace covalente simple."
+          },
+          Cl2: {
+            name: "Dicloro (Gas Cloro)",
+            formula: "Cl₂",
+            formulaHtml: "Cl<sub>2</sub>",
+            atoms: [
+              { id: "Cl1", symbol: "Cl", x: 190, y: 170, r: 42, target: 8, group: 17, valence: 7, colorGrad: "grad-Cl", textColor: "#FFFFFF", allowLonePairs: true,
+                lpSpots: [
+                  { id: "top", dx: 0, dy: -60, label: "arriba" },
+                  { id: "left", dx: -60, dy: 0, label: "izquierda" },
+                  { id: "bottom", dx: 0, dy: 60, label: "abajo" }
+                ]
+              },
+              { id: "Cl2", symbol: "Cl", x: 350, y: 170, r: 42, target: 8, group: 17, valence: 7, colorGrad: "grad-Cl", textColor: "#FFFFFF", allowLonePairs: true,
+                lpSpots: [
+                  { id: "top", dx: 0, dy: -60, label: "arriba" },
+                  { id: "right", dx: 60, dy: 0, label: "derecha" },
+                  { id: "bottom", dx: 0, dy: 60, label: "abajo" }
+                ]
+              }
+            ],
+            bonds: [
+              { id: "b-0-1", u: 0, v: 1, max: 1, current: 0, target: 1 }
+            ],
+            totalValence: 14,
+            valenceHint: "2 átomos de Cl (grupo 7A): 2 × 7 = 14 electrones de valencia.",
+            macro: "Gas amarillo-verdoso de olor sofocante e irritante, empleado en tratamiento de agua y desinfectantes.",
+            submicro: "Cada átomo de cloro aporta 7 electrones; comparten 1 par en el enlace y retienen 3 pares libres cada uno.",
+            symbolic: "Cl₂ · :Cl̈—Cl̈: · 1 enlace simple (2 e⁻) y 6 pares libres (12 e⁻) = 14 e⁻ en total."
+          },
+          HCl: {
+            name: "Cloruro de Hidrógeno",
+            formula: "HCl",
+            formulaHtml: "HCl",
+            atoms: [
+              { id: "H", symbol: "H", x: 190, y: 170, r: 36, target: 2, group: 1, valence: 1, colorGrad: "grad-H", textColor: "#1E293B", allowLonePairs: true,
+                lpSpots: [
+                  { id: "left", dx: -52, dy: 0, label: "izquierda" }
+                ]
+              },
+              { id: "Cl", symbol: "Cl", x: 340, y: 170, r: 42, target: 8, group: 17, valence: 7, colorGrad: "grad-Cl", textColor: "#FFFFFF", allowLonePairs: true,
+                lpSpots: [
+                  { id: "top", dx: 0, dy: -60, label: "arriba" },
+                  { id: "right", dx: 60, dy: 0, label: "derecha" },
+                  { id: "bottom", dx: 0, dy: 60, label: "abajo" }
+                ]
+              }
+            ],
+            bonds: [
+              { id: "b-0-1", u: 0, v: 1, max: 1, current: 0, target: 1 }
+            ],
+            totalValence: 8,
+            valenceHint: "1 H (grupo 1A: 1 e⁻) + 1 Cl (grupo 7A: 7 e⁻) = 8 electrones de valencia.",
+            macro: "Gas picante que, disuelto en agua, da origen al ácido clorhídrico (ácido muriático de limpieza).",
+            submicro: "Enlace covalente polar: el Cl atrae con más fuerza el par compartido (ΔEN = 3,0 - 2,1 = 0,9).",
+            symbolic: "HCl · H—Cl̈: · 8 e⁻ totales (2 compartidos + 6 no enlazantes en el cloro)."
+          },
+          H2O: {
+            name: "Agua",
+            formula: "H₂O",
+            formulaHtml: "H<sub>2</sub>O",
+            atoms: [
+              { id: "O", symbol: "O", x: 270, y: 140, r: 42, target: 8, group: 16, valence: 6, colorGrad: "grad-O", textColor: "#FFFFFF", allowLonePairs: true,
+                lpSpots: [
+                  { id: "top", dx: 0, dy: -58, label: "arriba" },
+                  { id: "bottom", dx: 0, dy: 58, label: "abajo" }
+                ]
+              },
+              { id: "H1", symbol: "H", x: 150, y: 230, r: 35, target: 2, group: 1, valence: 1, colorGrad: "grad-H", textColor: "#1E293B", allowLonePairs: true,
+                lpSpots: [
+                  { id: "bottom", dx: 0, dy: 48, label: "abajo" }
+                ]
+              },
+              { id: "H2", symbol: "H", x: 390, y: 230, r: 35, target: 2, group: 1, valence: 1, colorGrad: "grad-H", textColor: "#1E293B", allowLonePairs: true,
+                lpSpots: [
+                  { id: "bottom", dx: 0, dy: 48, label: "abajo" }
+                ]
+              }
+            ],
+            bonds: [
+              { id: "b-O-H1", u: 0, v: 1, max: 1, current: 0, target: 1 },
+              { id: "b-O-H2", u: 0, v: 2, max: 1, current: 0, target: 1 }
+            ],
+            totalValence: 8,
+            valenceHint: "1 O (grupo 6A: 6 e⁻) + 2 H (grupo 1A: 2 × 1 e⁻) = 8 electrones de valencia.",
+            macro: "Líquido incoloro a temperatura ambiente.",
+            submicro: "El oxígeno central forma 2 enlaces simples con los hidrógenos y conserva 2 pares solitarios.",
+            symbolic: "H₂O · H—Ö̈—H · 8 e⁻ de valencia (4 compartidos en 2 enlaces + 4 libres en el oxígeno)."
+          },
+          NH3: {
+            name: "Amoníaco",
+            formula: "NH₃",
+            formulaHtml: "NH<sub>3</sub>",
+            atoms: [
+              { id: "N", symbol: "N", x: 270, y: 150, r: 42, target: 8, group: 15, valence: 5, colorGrad: "grad-N", textColor: "#FFFFFF", allowLonePairs: true,
+                lpSpots: [
+                  { id: "top", dx: 0, dy: -58, label: "arriba" }
+                ]
+              },
+              { id: "H1", symbol: "H", x: 150, y: 240, r: 34, target: 2, group: 1, valence: 1, colorGrad: "grad-H", textColor: "#1E293B", allowLonePairs: true,
+                lpSpots: [
+                  { id: "left", dx: -48, dy: 0, label: "izquierda" }
+                ]
+              },
+              { id: "H2", symbol: "H", x: 270, y: 260, r: 34, target: 2, group: 1, valence: 1, colorGrad: "grad-H", textColor: "#1E293B", allowLonePairs: true,
+                lpSpots: [
+                  { id: "bottom", dx: 0, dy: 46, label: "abajo" }
+                ]
+              },
+              { id: "H3", symbol: "H", x: 390, y: 240, r: 34, target: 2, group: 1, valence: 1, colorGrad: "grad-H", textColor: "#1E293B", allowLonePairs: true,
+                lpSpots: [
+                  { id: "right", dx: 48, dy: 0, label: "derecha" }
+                ]
+              }
+            ],
+            bonds: [
+              { id: "b-N-H1", u: 0, v: 1, max: 1, current: 0, target: 1 },
+              { id: "b-N-H2", u: 0, v: 2, max: 1, current: 0, target: 1 },
+              { id: "b-N-H3", u: 0, v: 3, max: 1, current: 0, target: 1 }
+            ],
+            totalValence: 8,
+            valenceHint: "1 N (grupo 5A: 5 e⁻) + 3 H (grupo 1A: 3 × 1 e⁻) = 8 electrones de valencia.",
+            macro: "Gas penetrante y característico, ingrediente clave de fertilizantes agrícolas y productos desengrasantes.",
+            submicro: "El nitrógeno central comparte 3 pares con 3 hidrógenos y tiene 1 par de electrones no compartido.",
+            symbolic: "NH₃ · H—N̈(H)—H · 8 e⁻ totales (6 en 3 enlaces covalentes simples + 2 del par solitario)."
+          },
+          CH4: {
+            name: "Metano",
+            formula: "CH₄",
+            formulaHtml: "CH<sub>4</sub>",
+            atoms: [
+              { id: "C", symbol: "C", x: 270, y: 170, r: 42, target: 8, group: 14, valence: 4, colorGrad: "grad-C", textColor: "#FFFFFF", allowLonePairs: false },
+              { id: "H1", symbol: "H", x: 270, y: 65, r: 32, target: 2, group: 1, valence: 1, colorGrad: "grad-H", textColor: "#1E293B", allowLonePairs: true,
+                lpSpots: [
+                  { id: "top", dx: 0, dy: -46, label: "arriba" }
+                ]
+              },
+              { id: "H2", symbol: "H", x: 155, y: 170, r: 32, target: 2, group: 1, valence: 1, colorGrad: "grad-H", textColor: "#1E293B", allowLonePairs: true,
+                lpSpots: [
+                  { id: "left", dx: -46, dy: 0, label: "izquierda" }
+                ]
+              },
+              { id: "H3", symbol: "H", x: 270, y: 275, r: 32, target: 2, group: 1, valence: 1, colorGrad: "grad-H", textColor: "#1E293B", allowLonePairs: true,
+                lpSpots: [
+                  { id: "bottom", dx: 0, dy: 46, label: "abajo" }
+                ]
+              },
+              { id: "H4", symbol: "H", x: 385, y: 170, r: 32, target: 2, group: 1, valence: 1, colorGrad: "grad-H", textColor: "#1E293B", allowLonePairs: true,
+                lpSpots: [
+                  { id: "right", dx: 46, dy: 0, label: "derecha" }
+                ]
+              }
+            ],
+            bonds: [
+              { id: "b-C-H1", u: 0, v: 1, max: 1, current: 0, target: 1 },
+              { id: "b-C-H2", u: 0, v: 2, max: 1, current: 0, target: 1 },
+              { id: "b-C-H3", u: 0, v: 3, max: 1, current: 0, target: 1 },
+              { id: "b-C-H4", u: 0, v: 4, max: 1, current: 0, target: 1 }
+            ],
+            totalValence: 8,
+            valenceHint: "1 C (grupo 4A: 4 e⁻) + 4 H (grupo 1A: 4 × 1 e⁻) = 8 electrones de valencia.",
+            macro: "Principal componente del gas natural en cañerías domiciliarias y garrafas en toda la Argentina.",
+            submicro: "El carbono central comparte sus 4 electrones con cuatro átomos de hidrógeno, sin dejar electrones libres.",
+            symbolic: "CH₄ · H—C(H)(H)—H · 4 enlaces covalentes simples = 8 e⁻ compartidos (0 pares libres)."
+          },
+          CO2: {
+            name: "Dióxido de Carbono",
+            formula: "CO₂",
+            formulaHtml: "CO<sub>2</sub>",
+            atoms: [
+              { id: "O1", symbol: "O", x: 130, y: 170, r: 42, target: 8, group: 16, valence: 6, colorGrad: "grad-O", textColor: "#FFFFFF", allowLonePairs: true,
+                lpSpots: [
+                  { id: "top", dx: 0, dy: -58, label: "arriba" },
+                  { id: "bottom", dx: 0, dy: 58, label: "abajo" }
+                ]
+              },
+              { id: "C", symbol: "C", x: 270, y: 170, r: 42, target: 8, group: 14, valence: 4, colorGrad: "grad-C", textColor: "#FFFFFF", allowLonePairs: false },
+              { id: "O2", symbol: "O", x: 410, y: 170, r: 42, target: 8, group: 16, valence: 6, colorGrad: "grad-O", textColor: "#FFFFFF", allowLonePairs: true,
+                lpSpots: [
+                  { id: "top", dx: 0, dy: -58, label: "arriba" },
+                  { id: "bottom", dx: 0, dy: 58, label: "abajo" }
+                ]
+              }
+            ],
+            bonds: [
+              { id: "b-O1-C", u: 0, v: 1, max: 3, current: 0, target: 2 },
+              { id: "b-C-O2", u: 1, v: 2, max: 3, current: 0, target: 2 }
+            ],
+            totalValence: 16,
+            valenceHint: "1 C (grupo 4A: 4 e⁻) + 2 O (grupo 6A: 2 × 6 e⁻) = 16 electrones de valencia.",
+            macro: "Gas exhalado al respirar, producido en combustiones y causante principal del efecto invernadero.",
+            submicro: "Molécula lineal: el carbono comparte 2 pares con cada oxígeno (dos enlaces dobles) para que todos completen 8.",
+            symbolic: "CO₂ · :Ö=C=Ö: · 2 enlaces dobles (8 e⁻) + 4 pares libres (8 e⁻) = 16 e⁻ de valencia."
+          },
+          O2: {
+            name: "Dioxígeno (Gas Oxígeno)",
+            formula: "O₂",
+            formulaHtml: "O<sub>2</sub>",
+            atoms: [
+              { id: "O1", symbol: "O", x: 190, y: 170, r: 42, target: 8, group: 16, valence: 6, colorGrad: "grad-O", textColor: "#FFFFFF", allowLonePairs: true,
+                lpSpots: [
+                  { id: "top", dx: 0, dy: -58, label: "arriba" },
+                  { id: "bottom", dx: 0, dy: 58, label: "abajo" }
+                ]
+              },
+              { id: "O2", symbol: "O", x: 350, y: 170, r: 42, target: 8, group: 16, valence: 6, colorGrad: "grad-O", textColor: "#FFFFFF", allowLonePairs: true,
+                lpSpots: [
+                  { id: "top", dx: 0, dy: -58, label: "arriba" },
+                  { id: "bottom", dx: 0, dy: 58, label: "abajo" }
+                ]
+              }
+            ],
+            bonds: [
+              { id: "b-0-1", u: 0, v: 1, max: 3, current: 0, target: 2 }
+            ],
+            totalValence: 12,
+            valenceHint: "2 átomos de O (grupo 6A): 2 × 6 = 12 electrones de valencia.",
+            macro: "Gas incoloro indispensable para la respiración aeróbica de los seres vivos y las reacciones de combustión.",
+            submicro: "Los dos átomos de oxígeno comparten 2 pares electrónicos (enlace doble) y retienen 2 pares solitarios cada uno.",
+            symbolic: "O₂ · :Ö=Ö: · 1 enlace doble (4 e⁻) + 4 pares libres (8 e⁻) = 12 e⁻ de valencia."
+          },
+          N2: {
+            name: "Dinitrógeno (Gas Nitrógeno)",
+            formula: "N₂",
+            formulaHtml: "N<sub>2</sub>",
+            atoms: [
+              { id: "N1", symbol: "N", x: 190, y: 170, r: 42, target: 8, group: 15, valence: 5, colorGrad: "grad-N", textColor: "#FFFFFF", allowLonePairs: true,
+                lpSpots: [
+                  { id: "left", dx: -60, dy: 0, label: "izquierda" }
+                ]
+              },
+              { id: "N2", symbol: "N", x: 350, y: 170, r: 42, target: 8, group: 15, valence: 5, colorGrad: "grad-N", textColor: "#FFFFFF", allowLonePairs: true,
+                lpSpots: [
+                  { id: "right", dx: 60, dy: 0, label: "derecha" }
+                ]
+              }
+            ],
+            bonds: [
+              { id: "b-0-1", u: 0, v: 1, max: 3, current: 0, target: 3 }
+            ],
+            totalValence: 10,
+            valenceHint: "2 átomos de N (grupo 5A): 2 × 5 = 10 electrones de valencia.",
+            macro: "Gas inerte que conforma el 78% de la atmósfera terrestre; no es inflamable ni tóxico.",
+            submicro: "Unión excepcionalmente fuerte: comparten 3 pares electrónicos (enlace triple) con 1 par libre por átomo.",
+            symbolic: "N₂ · :N≡N: · 1 enlace triple (6 e⁻) + 2 pares libres (4 e⁻) = 10 e⁻ de valencia."
+          }
+        };
+
+        // Estado de la aplicación
+        let currentKey = "H2O";
+        let state = {
+          unlocked: false,
+          valenceGuessed: null,
+          bonds: {}, // bondId -> count (0, 1, 2, 3)
+          lonePairs: {} // atomId_spotId -> boolean
+        };
+
+        // Elementos DOM
+        const molSelectorContainer = document.getElementById("mol-selector-buttons");
+        const stageMolTitle = document.getElementById("stage-mol-title");
+        const stageMolSubtext = document.getElementById("stage-mol-subtext");
+        const stageStatusBadge = document.getElementById("stage-status-badge");
+        const atomValenceGuide = document.getElementById("atom-valence-guide");
+        const valenceInput = document.getElementById("valence-count-input");
+        const confirmValenceBtn = document.getElementById("confirm-valence-btn");
+        const verifyBtn = document.getElementById("verify-btn");
+        const resetBtn = document.getElementById("reset-btn");
+        const feedbackDisplay = document.getElementById("feedback-display");
+
+        const valUsedEl = document.getElementById("val-used");
+        const valTotalEl = document.getElementById("val-total");
+        const valBondsEl = document.getElementById("val-bonds");
+        const valLoneEl = document.getElementById("val-lone");
+
+        const viewMacro = document.getElementById("view-macro");
+        const viewSubmicro = document.getElementById("view-submicro");
+        const viewSymbolic = document.getElementById("view-symbolic");
+
+        const svgBondsLayer = document.getElementById("bonds-layer");
+        const svgAtomsLayer = document.getElementById("atoms-layer");
+        const svgLonePairsLayer = document.getElementById("lone-pairs-layer");
+
+        const guideModal = document.getElementById("guide-modal");
+        const openGuideBtn = document.getElementById("open-guide-btn");
+        const closeGuideBtn = document.getElementById("close-guide-btn");
+        const doneGuideBtn = document.getElementById("done-guide-btn");
+        const printGuideBtn = document.getElementById("print-guide-btn");
+
+        // Inicializar botones de moléculas
+        function initMoleculeButtons() {
+          molSelectorContainer.innerHTML = "";
+          Object.keys(MOLECULES).forEach(key => {
+            const mol = MOLECULES[key];
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = `mol-btn ${key === currentKey ? "active" : ""}`;
+            btn.id = `btn-mol-${key}`;
+            btn.innerHTML = mol.formulaHtml;
+            btn.title = `Seleccionar ${mol.name} (${mol.formula})`;
+            btn.setAttribute("role", "tab");
+            btn.setAttribute("aria-selected", key === currentKey ? "true" : "false");
+            btn.addEventListener("click", () => selectMolecule(key));
+            molSelectorContainer.appendChild(btn);
+          });
+        }
+
+        // Cambiar de molécula
+        function selectMolecule(key) {
+          if (!MOLECULES[key]) return;
+          currentKey = key;
+
+          // Actualizar pestañas activas
+          document.querySelectorAll(".mol-btn").forEach(btn => {
+            const isActive = btn.id === `btn-mol-${key}`;
+            btn.classList.toggle("active", isActive);
+            btn.setAttribute("aria-selected", isActive ? "true" : "false");
+          });
+
+          // Resetear estado para la nueva molécula
+          resetMoleculeState();
+          renderApp();
+        }
+
+        // Resetear estado del modelo
+        function resetMoleculeState() {
+          state.unlocked = false;
+          state.valenceGuessed = null;
+          state.bonds = {};
+          state.lonePairs = {};
+
+          const mol = MOLECULES[currentKey];
+          mol.bonds.forEach(b => {
+            state.bonds[b.id] = 0;
+          });
+
+          valenceInput.value = "";
+          valenceInput.disabled = false;
+          confirmValenceBtn.disabled = false;
+          verifyBtn.disabled = true;
+
+          setFeedback("info", `Paso 1: ¿Cuántos electrones de valencia tiene en total la molécula de ${mol.formula}?`);
+        }
+
+        // Mensaje de feedback con control de estilo (máx 2 líneas)
+        function setFeedback(type, text) {
+          feedbackDisplay.className = `feedback-box ${type}`;
+          feedbackDisplay.textContent = text;
+        }
+
+        // Renderizado general
+        function renderApp() {
+          const mol = MOLECULES[currentKey];
+
+          stageMolTitle.textContent = `Molécula: ${mol.name} (${mol.formula})`;
+          valTotalEl.textContent = state.unlocked ? mol.totalValence : "—";
+          atomValenceGuide.textContent = mol.valenceHint;
+
+          if (!state.unlocked) {
+            stageMolSubtext.textContent = "Paso 1: Ingresá el total de electrones de valencia en el panel de la derecha.";
+            stageStatusBadge.textContent = "Paso 1: Cálculo previo";
+            stageStatusBadge.style.color = "var(--color-title)";
+            document.getElementById("step2-status").textContent = "Bloqueado (completá el Paso 1)";
+            document.getElementById("step2-status").style.color = "#64748B";
+          } else {
+            stageMolSubtext.textContent = "Tocá entre dos átomos para compartir enlaces (—). Tocá alrededor para pares libres (··).";
+            stageStatusBadge.textContent = "Paso 2: Construcción activa";
+            stageStatusBadge.style.color = "var(--color-success)";
+            document.getElementById("step2-status").textContent = "Habilitado";
+            document.getElementById("step2-status").style.color = "var(--color-success)";
+          }
+
+          renderSimulationSVG();
+          updateCounters();
+          updateTriplet();
+        }
+
+        // Calcular electrones por átomo y totales
+        function calculateElectronCounts() {
+          const mol = MOLECULES[currentKey];
+          const atomCounts = {};
+          mol.atoms.forEach(a => { atomCounts[a.id] = 0; });
+
+          let sharedElectrons = 0;
+          let sharedPairs = 0;
+          mol.bonds.forEach(b => {
+            const count = state.bonds[b.id] || 0;
+            sharedPairs += count;
+            sharedElectrons += count * 2;
+            const uId = mol.atoms[b.u].id;
+            const vId = mol.atoms[b.v].id;
+            atomCounts[uId] += count * 2;
+            atomCounts[vId] += count * 2;
+          });
+
+          let loneElectrons = 0;
+          let lonePairs = 0;
+          mol.atoms.forEach(atom => {
+            if (atom.lpSpots) {
+              atom.lpSpots.forEach(spot => {
+                const key = `${atom.id}_${spot.id}`;
+                if (state.lonePairs[key]) {
+                  lonePairs += 1;
+                  loneElectrons += 2;
+                  atomCounts[atom.id] += 2;
+                }
+              });
+            }
+          });
+
+          const totalUsed = sharedElectrons + loneElectrons;
+          return {
+            atomCounts,
+            sharedPairs,
+            sharedElectrons,
+            lonePairs,
+            loneElectrons,
+            totalUsed
+          };
+        }
+
+        // Actualizar contadores del panel
+        function updateCounters() {
+          const mol = MOLECULES[currentKey];
+          const stats = calculateElectronCounts();
+
+          valUsedEl.textContent = stats.totalUsed;
+          valBondsEl.textContent = `${stats.sharedPairs} (${stats.sharedElectrons} e⁻)`;
+          valLoneEl.textContent = `${stats.lonePairs} (${stats.loneElectrons} e⁻)`;
+
+          if (state.unlocked) {
+            if (stats.totalUsed === mol.totalValence) {
+              valUsedEl.className = "balance-value complete";
+            } else if (stats.totalUsed > mol.totalValence) {
+              valUsedEl.className = "balance-value over";
+            } else {
+              valUsedEl.className = "balance-value";
+            }
+          } else {
+            valUsedEl.className = "balance-value";
+          }
+        }
+
+        // Actualizar Triplet "Qué estás viendo"
+        function updateTriplet() {
+          const mol = MOLECULES[currentKey];
+          const stats = calculateElectronCounts();
+
+          viewMacro.textContent = mol.macro;
+
+          if (!state.unlocked) {
+            viewSubmicro.textContent = `Los átomos que van a formar ${mol.formula}, todavía sin enlazar. Necesitan compartir o retener electrones para alcanzar estabilidad electrónica.`;
+            viewSymbolic.textContent = `Fórmula: ${mol.formula} · Calculá los electrones de valencia totales para comenzar.`;
+          } else {
+            let bondDesc = stats.sharedPairs === 0 ? "ningún enlace formado" : `${stats.sharedPairs} pares compartidos (${stats.sharedElectrons} e⁻)`;
+            let loneDesc = stats.lonePairs === 0 ? "sin pares libres" : `${stats.lonePairs} pares solitarios (${stats.loneElectrons} e⁻)`;
+            viewSubmicro.textContent = `${mol.submicro} En este momento tenés ${bondDesc} y ${loneDesc}.`;
+            viewSymbolic.textContent = `Fórmula: ${mol.formula} · Electrones en juego: ${stats.totalUsed} de ${mol.totalValence} disponibles.`;
+          }
+        }
+
+        // Renderizado del Canvas SVG interactivo
+        function renderSimulationSVG() {
+          const mol = MOLECULES[currentKey];
+          const stats = calculateElectronCounts();
+
+          // Limpiar capas
+          svgBondsLayer.innerHTML = "";
+          svgAtomsLayer.innerHTML = "";
+          svgLonePairsLayer.innerHTML = "";
+
+          // 1. Dibujar enlaces entre átomos
+          mol.bonds.forEach(bond => {
+            const atomU = mol.atoms[bond.u];
+            const atomV = mol.atoms[bond.v];
+            const order = state.bonds[bond.id] || 0;
+
+            const dx = atomV.x - atomU.x;
+            const dy = atomV.y - atomU.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            const ux = dx / dist;
+            const uy = dy / dist;
+            const perpX = -uy;
+            const perpY = ux;
+
+            // Grupo contenedor de enlace interactivo
+            const bondGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            bondGroup.setAttribute("class", "interactive-spot");
+            bondGroup.setAttribute("tabindex", state.unlocked ? "0" : "-1");
+            bondGroup.setAttribute("role", "button");
+            bondGroup.setAttribute("aria-label", `Enlace entre ${atomU.symbol} y ${atomV.symbol}: actualmente orden ${order}. Tocá para cambiar.`);
+
+            // Línea de referencia suave si el orden es 0
+            if (order === 0) {
+              const guideLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+              guideLine.setAttribute("x1", atomU.x);
+              guideLine.setAttribute("y1", atomU.y);
+              guideLine.setAttribute("x2", atomV.x);
+              guideLine.setAttribute("y2", atomV.y);
+              guideLine.setAttribute("stroke", "#CBD5E1");
+              guideLine.setAttribute("stroke-width", "2");
+              guideLine.setAttribute("stroke-dasharray", "4,4");
+              bondGroup.appendChild(guideLine);
+
+              // Indicador central (+) para invitar a hacer clic
+              const midX = (atomU.x + atomV.x) / 2;
+              const midY = (atomU.y + atomV.y) / 2;
+              const promptCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+              promptCircle.setAttribute("cx", midX);
+              promptCircle.setAttribute("cy", midY);
+              promptCircle.setAttribute("r", "12");
+              promptCircle.setAttribute("fill", "#FFFFFF");
+              promptCircle.setAttribute("stroke", "#94A3B8");
+              promptCircle.setAttribute("stroke-width", "1.5");
+              bondGroup.appendChild(promptCircle);
+
+              const promptText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+              promptText.setAttribute("x", midX);
+              promptText.setAttribute("y", midY + 4);
+              promptText.setAttribute("text-anchor", "middle");
+              promptText.setAttribute("font-size", "14");
+              promptText.setAttribute("font-weight", "bold");
+              promptText.setAttribute("fill", "#1F5C8B");
+              promptText.textContent = "+";
+              bondGroup.appendChild(promptText);
+            } else if (order === 1) {
+              // Enlace Simple (1 guion grueso y claro)
+              const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+              line.setAttribute("x1", atomU.x + ux * (atomU.r - 2));
+              line.setAttribute("y1", atomU.y + uy * (atomU.r - 2));
+              line.setAttribute("x2", atomV.x - ux * (atomV.r - 2));
+              line.setAttribute("y2", atomV.y - uy * (atomV.r - 2));
+              line.setAttribute("stroke", "#1F5C8B");
+              line.setAttribute("stroke-width", "4.5");
+              line.setAttribute("stroke-linecap", "round");
+              bondGroup.appendChild(line);
+            } else if (order === 2) {
+              // Enlace Doble (2 guiones paralelos)
+              const offset = 5;
+              [-offset, offset].forEach(off => {
+                const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                line.setAttribute("x1", atomU.x + ux * (atomU.r - 4) + perpX * off);
+                line.setAttribute("y1", atomU.y + uy * (atomU.r - 4) + perpY * off);
+                line.setAttribute("x2", atomV.x - ux * (atomV.r - 4) + perpX * off);
+                line.setAttribute("y2", atomV.y - uy * (atomV.r - 4) + perpY * off);
+                line.setAttribute("stroke", "#1F5C8B");
+                line.setAttribute("stroke-width", "4");
+                line.setAttribute("stroke-linecap", "round");
+                bondGroup.appendChild(line);
+              });
+            } else if (order === 3) {
+              // Enlace Triple (3 guiones paralelos)
+              const offset = 7;
+              [-offset, 0, offset].forEach(off => {
+                const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                line.setAttribute("x1", atomU.x + ux * (atomU.r - 4) + perpX * off);
+                line.setAttribute("y1", atomU.y + uy * (atomU.r - 4) + perpY * off);
+                line.setAttribute("x2", atomV.x - ux * (atomV.r - 4) + perpX * off);
+                line.setAttribute("y2", atomV.y - uy * (atomV.r - 4) + perpY * off);
+                line.setAttribute("stroke", "#1F5C8B");
+                line.setAttribute("stroke-width", "3.5");
+                line.setAttribute("stroke-linecap", "round");
+                bondGroup.appendChild(line);
+              });
+            }
+
+            // Área táctil invisible amplia (≥44px de diámetro o grosor para facilidad de uso)
+            const hitArea = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            hitArea.setAttribute("x1", atomU.x);
+            hitArea.setAttribute("y1", atomU.y);
+            hitArea.setAttribute("x2", atomV.x);
+            hitArea.setAttribute("y2", atomV.y);
+            hitArea.setAttribute("stroke", "transparent");
+            hitArea.setAttribute("stroke-width", "44");
+            bondGroup.appendChild(hitArea);
+
+            // Handler de clic / teclado para ciclar enlace
+            const toggleBond = () => {
+              if (!state.unlocked) {
+                setFeedback("error", "Primero confirmá el total de electrones de valencia en el Paso 1.");
+                valenceInput.focus();
+                return;
+              }
+              const nextOrder = (order + 1) % (bond.max + 1);
+              state.bonds[bond.id] = nextOrder;
+              renderApp();
+            };
+
+            bondGroup.addEventListener("click", toggleBond);
+            bondGroup.addEventListener("keydown", (e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                toggleBond();
+              }
+            });
+
+            svgBondsLayer.appendChild(bondGroup);
+          });
+
+          // 2. Dibujar Átomos (Esferas sólidas, nunca órbitas, con anillo de octeto/dueto)
+          mol.atoms.forEach(atom => {
+            const atomGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            const eCount = stats.atomCounts[atom.id] || 0;
+            const isComplete = eCount === atom.target;
+
+            // Anillo exterior de octeto/dueto
+            // Verde (#2E8B57) si completó (2 para H, 8 para los demás)
+            const ring = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            ring.setAttribute("cx", atom.x);
+            ring.setAttribute("cy", atom.y);
+            ring.setAttribute("r", atom.r + 9);
+            ring.setAttribute("fill", "none");
+
+            if (isComplete) {
+              ring.setAttribute("stroke", "var(--color-success)");
+              ring.setAttribute("stroke-width", "4");
+            } else if (eCount > atom.target) {
+              ring.setAttribute("stroke", "var(--color-error)");
+              ring.setAttribute("stroke-width", "3.5");
+              ring.setAttribute("stroke-dasharray", "4,2");
+            } else {
+              ring.setAttribute("stroke", "#CBD5E1");
+              ring.setAttribute("stroke-width", "2");
+              ring.setAttribute("stroke-dasharray", "3,3");
+            }
+            atomGroup.appendChild(ring);
+
+            // Esfera atómica limpia (círculo con gradiente radial 3D)
+            const sphere = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            sphere.setAttribute("cx", atom.x);
+            sphere.setAttribute("cy", atom.y);
+            sphere.setAttribute("r", atom.r);
+            sphere.setAttribute("fill", `url(#${atom.colorGrad})`);
+            sphere.setAttribute("filter", "url(#soft-shadow)");
+            atomGroup.appendChild(sphere);
+
+            // Símbolo químico del elemento (Arial negrita centrado)
+            const symbolText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            symbolText.setAttribute("x", atom.x);
+            symbolText.setAttribute("y", atom.y + 6);
+            symbolText.setAttribute("text-anchor", "middle");
+            symbolText.setAttribute("font-size", atom.r > 38 ? "24" : "20");
+            symbolText.setAttribute("font-weight", "bold");
+            symbolText.setAttribute("fill", atom.textColor);
+            symbolText.setAttribute("pointer-events", "none");
+            symbolText.textContent = atom.symbol;
+            atomGroup.appendChild(symbolText);
+
+            // Etiqueta de recuento electrónico individual debajo o al costado
+            const countLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            countLabel.setAttribute("x", atom.x);
+            countLabel.setAttribute("y", atom.y + atom.r + 26);
+            countLabel.setAttribute("text-anchor", "middle");
+            countLabel.setAttribute("font-size", "12");
+            countLabel.setAttribute("font-weight", "bold");
+            countLabel.setAttribute("fill", isComplete ? "var(--color-success)" : (eCount > atom.target ? "var(--color-error)" : "#64748B"));
+            countLabel.textContent = `${eCount}/${atom.target} e⁻ ${isComplete ? "✓" : ""}`;
+            atomGroup.appendChild(countLabel);
+
+            svgAtomsLayer.appendChild(atomGroup);
+          });
+
+          // 3. Dibujar Pares Libres interactivos (dos puntos)
+          mol.atoms.forEach(atom => {
+            if (atom.lpSpots && atom.allowLonePairs) {
+              atom.lpSpots.forEach(spot => {
+                const spotKey = `${atom.id}_${spot.id}`;
+                const hasPair = !!state.lonePairs[spotKey];
+
+                const spotGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+                spotGroup.setAttribute("class", "interactive-spot");
+                spotGroup.setAttribute("tabindex", state.unlocked ? "0" : "-1");
+                spotGroup.setAttribute("role", "button");
+                spotGroup.setAttribute("aria-label", `Par libre en ${atom.symbol} posición ${spot.label}: ${hasPair ? "presente" : "vacío"}. Tocá para alternar.`);
+
+                const posX = atom.x + spot.dx;
+                const posY = atom.y + spot.dy;
+
+                // Si está activo, dibujamos 2 puntos claros (par de electrones)
+                if (hasPair) {
+                  // Distancia entre los dos puntos
+                  const dotDist = 6;
+                  // Si el spot es horizontal (left/right) o vertical (top/bottom)
+                  const isVertical = spot.id === "top" || spot.id === "bottom";
+                  const p1x = isVertical ? posX - dotDist : posX;
+                  const p1y = isVertical ? posY : posY - dotDist;
+                  const p2x = isVertical ? posX + dotDist : posX;
+                  const p2y = isVertical ? posY : posY + dotDist;
+
+                  const dot1 = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                  dot1.setAttribute("cx", p1x);
+                  dot1.setAttribute("cy", p1y);
+                  dot1.setAttribute("r", "4");
+                  dot1.setAttribute("fill", "#1E293B");
+
+                  const dot2 = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                  dot2.setAttribute("cx", p2x);
+                  dot2.setAttribute("cy", p2y);
+                  dot2.setAttribute("r", "4");
+                  dot2.setAttribute("fill", "#1E293B");
+
+                  // Pequeño halo sutil de fondo
+                  const halo = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                  halo.setAttribute("x", Math.min(p1x, p2x) - 7);
+                  halo.setAttribute("y", Math.min(p1y, p2y) - 7);
+                  halo.setAttribute("width", isVertical ? 28 : 14);
+                  halo.setAttribute("height", isVertical ? 14 : 28);
+                  halo.setAttribute("rx", "6");
+                  halo.setAttribute("fill", "#E2E8F0");
+                  halo.setAttribute("opacity", "0.6");
+
+                  spotGroup.appendChild(halo);
+                  spotGroup.appendChild(dot1);
+                  spotGroup.appendChild(dot2);
+                } else {
+                  // Spot vacío: guía sutil táctil
+                  const emptyGuide = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                  emptyGuide.setAttribute("cx", posX);
+                  emptyGuide.setAttribute("cy", posY);
+                  emptyGuide.setAttribute("r", "9");
+                  emptyGuide.setAttribute("fill", "#F1F5F9");
+                  emptyGuide.setAttribute("stroke", "#CBD5E1");
+                  emptyGuide.setAttribute("stroke-width", "1.5");
+                  emptyGuide.setAttribute("stroke-dasharray", "2,2");
+                  spotGroup.appendChild(emptyGuide);
+
+                  const plusText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                  plusText.setAttribute("x", posX);
+                  plusText.setAttribute("y", posY + 3.5);
+                  plusText.setAttribute("text-anchor", "middle");
+                  plusText.setAttribute("font-size", "11");
+                  plusText.setAttribute("font-weight", "bold");
+                  plusText.setAttribute("fill", "#94A3B8");
+                  plusText.textContent = ":";
+                  spotGroup.appendChild(plusText);
+                }
+
+                // Área táctil transparente amplia (≥44px)
+                const hitCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                hitCircle.setAttribute("cx", posX);
+                hitCircle.setAttribute("cy", posY);
+                hitCircle.setAttribute("r", "22");
+                hitCircle.setAttribute("fill", "transparent");
+                spotGroup.appendChild(hitCircle);
+
+                const togglePair = () => {
+                  if (!state.unlocked) {
+                    setFeedback("error", "Primero confirmá el total de electrones de valencia en el Paso 1.");
+                    valenceInput.focus();
+                    return;
+                  }
+                  state.lonePairs[spotKey] = !state.lonePairs[spotKey];
+                  renderApp();
+                };
+
+                spotGroup.addEventListener("click", togglePair);
+                spotGroup.addEventListener("keydown", (e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    togglePair();
+                  }
+                });
+
+                svgLonePairsLayer.appendChild(spotGroup);
+              });
+            }
+          });
+        }
+
+        // Paso 1: Validación del total de electrones de valencia
+        function handleConfirmValence() {
+          const mol = MOLECULES[currentKey];
+          const guessed = parseInt(valenceInput.value, 10);
+
+          if (isNaN(guessed) || guessed <= 0) {
+            setFeedback("error", "Escribí un número válido de electrones de valencia.");
+            valenceInput.focus();
+            return;
+          }
+
+          if (guessed !== mol.totalValence) {
+            // Devolución pedagógica si se equivoca
+            setFeedback("error", "Sumá los electrones de valencia de cada átomo.");
+            valenceInput.focus();
+            valenceInput.select();
+            return;
+          }
+
+          // Acierto
+          state.unlocked = true;
+          state.valenceGuessed = guessed;
+          valenceInput.disabled = true;
+          confirmValenceBtn.disabled = true;
+          verifyBtn.disabled = false;
+
+          setFeedback("success", `¡Excelente! El total es ${mol.totalValence} e⁻ de valencia. Ahora construí el esqueleto.`);
+          renderApp();
+        }
+
+        // Verificación de la estructura de Lewis construida
+        function handleVerify() {
+          if (!state.unlocked) return;
+
+          const mol = MOLECULES[currentKey];
+          const stats = calculateElectronCounts();
+
+          // 1. Verificar si se usaron los electrones disponibles
+          if (stats.totalUsed !== mol.totalValence) {
+            if (currentKey === "H2O" && stats.totalUsed === 10) {
+              setFeedback("error", "Usaste 10 electrones pero el agua tiene 8.");
+              return;
+            }
+            if (stats.totalUsed > mol.totalValence) {
+              setFeedback("error", `Usaste ${stats.totalUsed} electrones pero ${currentKey === "H2O" ? "el agua" : mol.name} tiene ${mol.totalValence}.`);
+              return;
+            }
+            const diff = mol.totalValence - stats.totalUsed;
+            setFeedback("error", `Usaste ${stats.totalUsed} electrones pero ${currentKey === "H2O" ? "el agua" : mol.name} tiene ${mol.totalValence}: te faltan ubicar ${diff} e⁻.`);
+            return;
+          }
+
+          // 2. Verificar casos de pares libres en H
+          for (let atom of mol.atoms) {
+            if (atom.symbol === "H") {
+              let hasLoneOnH = false;
+              if (atom.lpSpots) {
+                for (let s of atom.lpSpots) {
+                  if (state.lonePairs[`${atom.id}_${s.id}`]) {
+                    hasLoneOnH = true;
+                    break;
+                  }
+                }
+              }
+              if (hasLoneOnH || (stats.atomCounts[atom.id] || 0) > 2) {
+                setFeedback("error", "El H no lleva pares libres: se completa con 2.");
+                return;
+              }
+            }
+          }
+
+          // 3. Caso específico CO2: si C quedó con 4
+          if (currentKey === "CO2") {
+            const cCount = stats.atomCounts["C"] || 0;
+            if (cCount === 4) {
+              setFeedback("error", "En el CO2 el C queda con 4: probá un doble enlace.");
+              return;
+            }
+          }
+
+          // 4. Verificar si el orden de algún enlace es 0
+          for (let b of mol.bonds) {
+            const order = state.bonds[b.id] || 0;
+            if (order === 0) {
+              setFeedback("error", "Uní todos los átomos del esqueleto con al menos un enlace compartido.");
+              return;
+            }
+          }
+
+          // 5. Verificar octetos y duetos de todos los átomos
+          for (let atom of mol.atoms) {
+            const count = stats.atomCounts[atom.id] || 0;
+            if (atom.target === 2 && count !== 2) {
+              if (count > 2) {
+                setFeedback("error", "El H no lleva pares libres: se completa con 2.");
+              } else {
+                setFeedback("error", `Al hidrógeno le falta compartir un enlace para completar su dueto (tiene ${count}/2 e⁻).`);
+              }
+              return;
+            }
+            if (atom.target === 8 && count !== 8) {
+              if (count < 8) {
+                setFeedback("error", `Al átomo de ${atom.symbol} le faltan electrones para completar su octeto (tiene ${count}/8 e⁻).`);
+              } else {
+                setFeedback("error", `El átomo de ${atom.symbol} tiene ${count} electrones: supera la regla del octeto (máx 8).`);
+              }
+              return;
+            }
+          }
+
+          // 6. Verificar target exacto de enlace si aplica (ej. dobles / triples)
+          let allBondsMatch = true;
+          for (let b of mol.bonds) {
+            if ((state.bonds[b.id] || 0) !== b.target) {
+              allBondsMatch = false;
+              break;
+            }
+          }
+
+          if (allBondsMatch) {
+            setFeedback("success", `¡Excelente! Todos los átomos completaron su capa (dueto para H y octeto el resto) con los ${mol.totalValence} e⁻.`);
+          } else {
+            setFeedback("info", `Distribución válida: todos completaron su capa de valencia respetando la regla.`);
+          }
+        }
+
+        // Configuración de listeners
+        function setupEventListeners() {
+          confirmValenceBtn.addEventListener("click", handleConfirmValence);
+          valenceInput.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+              handleConfirmValence();
+            }
+          });
+
+          verifyBtn.addEventListener("click", handleVerify);
+
+          resetBtn.addEventListener("click", () => {
+            resetMoleculeState();
+            renderApp();
+          });
+
+          // Modal de guía
+          openGuideBtn.addEventListener("click", () => {
+            guideModal.classList.add("open");
+            document.body.style.overflow = "hidden";
+            closeGuideBtn.focus();
+          });
+
+          const closeModal = () => {
+            guideModal.classList.remove("open");
+            document.body.style.overflow = "";
+            openGuideBtn.focus();
+          };
+
+          closeGuideBtn.addEventListener("click", closeModal);
+          doneGuideBtn.addEventListener("click", closeModal);
+
+          guideModal.addEventListener("click", (e) => {
+            if (e.target === guideModal) {
+              closeModal();
+            }
+          });
+
+          document.addEventListener("keydown", (e) => {
+            if (e.key === "Escape" && guideModal.classList.contains("open")) {
+              closeModal();
+            }
+          });
+
+          printGuideBtn.addEventListener("click", () => {
+            window.print();
+          });
+        }
+
+        // Inicio
+        initMoleculeButtons();
+        setupEventListeners();
+        selectMolecule("H2O");
+      })();
+    </script>
+
+    <!--
+      ==========================================================================
+      REGISTRO DE DATOS Y FUENTES CURRICULARES UTILIZADAS
+      Fuente bibliográfica: Chang, R., Goldsby, K. A. "Química", 12.ª edición,
+      McGraw-Hill Education.
+
+      1. Electrones de valencia por grupo (Capítulo 8, Tabla 8.1 "Símbolos de
+         puntos de Lewis de los elementos representativos"):
+         - Hidrógeno (H): Grupo 1 (1A) -> 1 electrón de valencia.
+         - Carbono (C): Grupo 14 (4A) -> 4 electrones de valencia.
+         - Nitrógeno (N): Grupo 15 (5A) -> 5 electrones de valencia.
+         - Oxígeno (O): Grupo 16 (6A) -> 6 electrones de valencia.
+         - Cloro (Cl): Grupo 17 (7A) -> 7 electrones de valencia.
+
+      2. Electronegatividades de Pauling (Capítulo 9, Tabla 9.1 "Electronegatividades
+         de elementos comunes"):
+         - H = 2,1
+         - C = 2,5
+         - N = 3,0
+         - Cl = 3,0
+         - O = 3,5
+
+      3. Criterio de Enlace Covalente / Polaridad:
+         - La escala de polaridad es continua. No se utiliza el corte artificial
+           de corte en ningún caso. Se toma como referencia conceptual orientativa
+           "≈ 2,0 como regla práctica, con excepciones".
+      ==========================================================================
+    -->
+  </body>
+</html>

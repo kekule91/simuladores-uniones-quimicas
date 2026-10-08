@@ -1,1 +1,960 @@
-$file:/workspace/simuladores-uniones/simuladores/sim-c04-energia-enlace/index.html
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>¿Por qué dos átomos se quedan juntos?</title>
+<style>
+  :root {
+    --azul: #1F5C8B;
+    --texto: #1E293B;
+    --acento: #E07A1F;
+    --ok: #2E8B57;
+    --error: #C0392B;
+    --panel: #EEF4F9;
+    --borde: #D8E2EC;
+    --viendo: #FFF4EA;
+    --violeta: #6D4AA8;
+    --radio: 16px;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: #FFFFFF;
+    color: var(--texto);
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 18px;
+    line-height: 1.45;
+  }
+
+  body { min-height: 100%; }
+
+  .barra {
+    height: 6px;
+    background: var(--azul);
+  }
+
+  .pagina {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 22px 22px 36px;
+  }
+
+  .skip {
+    position: absolute;
+    left: 12px;
+    top: -40px;
+    background: #FFFFFF;
+    color: var(--azul);
+    padding: 8px 12px;
+    border-radius: 12px;
+    z-index: 5;
+  }
+
+  .skip:focus { top: 12px; }
+
+  .kicker {
+    margin: 0 0 8px;
+    color: var(--acento);
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  h1 {
+    margin: 0 0 8px;
+    color: var(--azul);
+    font-size: 1.85rem;
+    line-height: 1.2;
+    font-weight: 700;
+  }
+
+  .consigna {
+    margin: 0 0 18px;
+    font-size: 1.05rem;
+  }
+
+  .layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.45fr) minmax(280px, 0.85fr);
+    gap: 18px;
+    align-items: start;
+  }
+
+  .sim, .controles, .viendo, .guia-caja {
+    border: 1px solid var(--borde);
+    border-radius: var(--radio);
+  }
+
+  .sim {
+    background: var(--panel);
+    padding: 12px 12px 14px;
+  }
+
+  .bloque-titulo {
+    margin: 4px 8px 2px;
+    color: var(--azul);
+    font-size: 0.95rem;
+    font-weight: 700;
+  }
+
+  svg { display: block; width: 100%; height: auto; touch-action: none; user-select: none; }
+
+  #atomos, #grafico { cursor: ew-resize; }
+
+  .nota {
+    margin: 4px 8px 8px;
+    font-size: 0.92rem;
+  }
+
+  .lado { display: flex; flex-direction: column; gap: 14px; }
+
+  .controles, .viendo { background: #FFFFFF; padding: 16px 16px 14px; }
+
+  .viendo { background: var(--viendo); }
+
+  h2 {
+    margin: 0 0 10px;
+    color: var(--azul);
+    font-size: 1.05rem;
+  }
+
+  label { display: block; font-weight: 700; margin-bottom: 4px; }
+
+  .ayuda {
+    margin: 0 0 8px;
+    font-size: 0.92rem;
+  }
+
+  .estado {
+    margin: 0 0 8px;
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--azul);
+    min-height: 1.3em;
+  }
+
+  .estado[data-zone="acercando"] { color: var(--acento); }
+  .estado[data-zone="minimo"] { color: var(--ok); }
+  .estado[data-zone="cerca"] { color: var(--error); }
+
+  input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 48px;
+    margin: 0 0 12px;
+    background: transparent;
+    cursor: pointer;
+  }
+
+  input[type="range"]:focus { outline: none; }
+
+  input[type="range"]:focus-visible {
+    outline: 3px solid var(--azul);
+    outline-offset: 3px;
+    border-radius: 12px;
+  }
+
+  input[type="range"]::-webkit-slider-runnable-track {
+    height: 8px;
+    background: var(--borde);
+    border-radius: 999px;
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 44px;
+    height: 44px;
+    margin-top: -18px;
+    border-radius: 50%;
+    background: var(--azul);
+    border: 3px solid #FFFFFF;
+    box-shadow: 0 0 0 1px var(--azul);
+  }
+
+  input[type="range"]::-moz-range-track {
+    height: 8px;
+    background: var(--borde);
+    border-radius: 999px;
+  }
+
+  input[type="range"]::-moz-range-thumb {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--azul);
+    border: 3px solid #FFFFFF;
+    box-shadow: 0 0 0 1px var(--azul);
+  }
+
+  .botones { display: flex; flex-direction: column; gap: 10px; }
+
+  button {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    min-height: 48px;
+    padding: 12px 16px;
+    border-radius: 14px;
+    cursor: pointer;
+  }
+
+  button:focus-visible {
+    outline: 3px solid var(--azul);
+    outline-offset: 3px;
+  }
+
+  .primario {
+    background: var(--azul);
+    color: #FFFFFF;
+    border: 2px solid var(--azul);
+  }
+
+  .primario:hover { background: #18486e; border-color: #18486e; }
+
+  .secundario {
+    background: #FFFFFF;
+    color: var(--azul);
+    border: 2px solid var(--azul);
+  }
+
+  .secundario:hover { background: var(--panel); }
+
+  .fila-botones { display: flex; gap: 10px; }
+
+  .fila-botones button { flex: 1; }
+
+  .tip {
+    margin: 10px 0 0;
+    font-size: 0.95rem;
+    color: var(--texto);
+  }
+
+  .viendo p { margin: 0 0 12px; }
+
+  .viendo p:last-child { margin-bottom: 0; }
+
+  .tag {
+    display: inline-block;
+    min-width: 6.6em;
+    margin-right: 6px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    text-align: center;
+    vertical-align: middle;
+  }
+
+  .tag.sub { color: var(--violeta); background: #f4eefb; }
+  .tag.mac { color: var(--ok); background: #e8f6ee; }
+  .tag.sim { color: var(--acento); background: #fff1e6; }
+
+  .simbolo { font-weight: 700; letter-spacing: 0.04em; }
+
+  dialog {
+    border: none;
+    border-radius: 18px;
+    padding: 0;
+    width: min(680px, calc(100% - 24px));
+    max-height: min(92vh, 900px);
+    color: var(--texto);
+    background: #FFFFFF;
+    box-shadow: 0 18px 48px rgba(30, 41, 59, 0.2);
+  }
+
+  dialog::backdrop { background: rgba(30, 41, 59, 0.45); }
+
+  .guia-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 18px 18px 8px;
+  }
+
+  .guia-top h2 { margin: 0; font-size: 1.35rem; }
+
+  .guia-kicker {
+    margin: 0 0 4px;
+    color: var(--acento);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .cerrar {
+    min-width: 48px;
+    min-height: 48px;
+    padding: 0 14px;
+  }
+
+  .guia-body { padding: 0 18px 18px; overflow: auto; max-height: calc(92vh - 96px); }
+
+  .datos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 18px;
+    margin: 0 0 8px;
+  }
+
+  .datos span {
+    border-bottom: 1px solid var(--texto);
+    min-width: 10em;
+    display: inline-block;
+  }
+
+  ol { margin: 8px 0 0; padding-left: 1.2em; }
+
+  li { margin: 0 0 14px; }
+
+  .tipo {
+    display: block;
+    margin-bottom: 2px;
+    color: var(--azul);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .tipo.antes { color: var(--acento); }
+
+  .linea {
+    border-bottom: 1px solid var(--borde);
+    height: 1.8em;
+  }
+
+  .guia-acciones { display: flex; gap: 10px; margin-top: 8px; }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  @media (max-width: 800px) {
+    .pagina { padding: 16px 14px 28px; }
+    h1 { font-size: 1.45rem; }
+    .layout { grid-template-columns: 1fr; }
+    .fila-botones, .guia-acciones { flex-direction: column; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+
+  @media print {
+    .barra, .skip, .layout, .consigna, h1, .kicker, .no-print { display: none !important; }
+    body { background: #FFFFFF; }
+    dialog, dialog[open] {
+      display: block !important;
+      position: static !important;
+      width: 100% !important;
+      max-height: none !important;
+      box-shadow: none !important;
+      overflow: visible !important;
+    }
+    .guia-body { max-height: none; overflow: visible; }
+    .linea { border-bottom: 1px solid #1E293B; height: 2em; }
+    .guia-acciones, .cerrar { display: none !important; }
+  }
+</style>
+</head>
+<body>
+  <a class="skip" href="#controles">Saltar a los controles</a>
+  <div class="barra"></div>
+  <div class="pagina">
+    <p class="kicker">QUÍMICA 5.º · UNIONES QUÍMICAS · CLASE 04</p>
+    <h1>¿Por qué dos átomos se quedan juntos?</h1>
+    <p class="consigna">Arrastrá la distancia y mirá la energía: no se quedan juntos solo porque se tocan.</p>
+
+    <div class="layout">
+      <section class="sim" aria-label="Simulación">
+        <h2 class="bloque-titulo">Dos átomos de hidrógeno</h2>
+        <svg id="atomos" viewBox="0 0 640 214" role="img" aria-labelledby="atomos-titulo atomos-desc">
+          <title id="atomos-titulo">Dos átomos de hidrógeno sobre una línea</title>
+          <desc id="atomos-desc">Dos esferas separadas, sin densidad compartida.</desc>
+          <line id="eje-atomos" x1="28" y1="96" x2="612" y2="96" stroke="#9bb3c7" stroke-width="2"></line>
+          <ellipse id="nube" cx="320" cy="96" rx="40" ry="28" fill="url(#nubeGrad)" opacity="0"></ellipse>
+          <text id="nube-texto" x="320" y="168" text-anchor="middle" fill="#6D4AA8" font-size="15" font-family="Arial, Helvetica, sans-serif" opacity="0">densidad electrónica compartida</text>
+          <text id="repel-texto" x="320" y="168" text-anchor="middle" fill="#C0392B" font-size="15" font-weight="700" font-family="Arial, Helvetica, sans-serif" opacity="0">los núcleos se repelen</text>
+          <circle id="atomo-izq" cx="180" cy="96" r="34" fill="url(#esfera)" stroke="#1F5C8B" stroke-width="2"></circle>
+          <circle id="atomo-der" cx="460" cy="96" r="34" fill="url(#esfera)" stroke="#1F5C8B" stroke-width="2"></circle>
+          <text id="letra-izq" x="180" y="102" text-anchor="middle" fill="#1E293B" font-size="22" font-weight="700" font-family="Arial, Helvetica, sans-serif">H</text>
+          <text id="letra-der" x="460" y="102" text-anchor="middle" fill="#1E293B" font-size="22" font-weight="700" font-family="Arial, Helvetica, sans-serif">H</text>
+          <defs>
+            <radialGradient id="esfera" cx="38%" cy="34%" r="68%">
+              <stop offset="0%" stop-color="#ffffff"></stop>
+              <stop offset="48%" stop-color="#d4e8f6"></stop>
+              <stop offset="100%" stop-color="#2f6f9e"></stop>
+            </radialGradient>
+            <radialGradient id="esfera-caliente" cx="38%" cy="34%" r="68%">
+              <stop offset="0%" stop-color="#fff6f4"></stop>
+              <stop offset="45%" stop-color="#f3c2b8"></stop>
+              <stop offset="100%" stop-color="#C0392B"></stop>
+            </radialGradient>
+            <radialGradient id="nubeGrad" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#6D4AA8" stop-opacity="0.72"></stop>
+              <stop offset="70%" stop-color="#6D4AA8" stop-opacity="0.28"></stop>
+              <stop offset="100%" stop-color="#6D4AA8" stop-opacity="0"></stop>
+            </radialGradient>
+          </defs>
+        </svg>
+        <p class="nota">Las esferas son los átomos. La mancha violeta es densidad compartida, no una órbita.</p>
+
+        <h2 class="bloque-titulo">Energía potencial y distancia</h2>
+        <svg id="grafico" viewBox="0 0 640 324" role="img" aria-labelledby="grafico-titulo grafico-desc">
+          <title id="grafico-titulo">Energía potencial en función de la distancia</title>
+          <desc id="grafico-desc">Curva cualitativa, sin números. El punto sigue la distancia actual.</desc>
+          <line id="cero" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="6 5"></line>
+          <line id="eje-y" stroke="#1E293B" stroke-width="1.6"></line>
+          <line id="eje-x" stroke="#1E293B" stroke-width="1.6"></line>
+          <polygon id="punta-y" fill="#1E293B"></polygon>
+          <polygon id="punta-x" fill="#1E293B"></polygon>
+          <path id="curva" fill="none" stroke="#1F5C8B" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"></path>
+          <circle id="hito" r="5" fill="none" stroke="#2E8B57" stroke-width="2"></circle>
+          <text id="hito-texto" fill="#2E8B57" font-size="13" font-weight="700" font-family="Arial, Helvetica, sans-serif"></text>
+          <g id="flecha" visibility="hidden">
+            <line id="flecha-linea" stroke="#E07A1F" stroke-width="3" marker-end="url(#punta-flecha)"></line>
+            <rect id="flecha-caja" rx="12" ry="12" fill="#FFF4EA" stroke="#E07A1F" stroke-width="1.5"></rect>
+            <text id="flecha-texto" fill="#1E293B" font-size="15" font-family="Arial, Helvetica, sans-serif">
+              <tspan id="flecha-l1" font-weight="700">Hay que ENTREGAR energía</tspan>
+              <tspan id="flecha-l2">para romper el enlace.</tspan>
+            </text>
+          </g>
+          <circle id="halo" r="11" fill="#FFFFFF" stroke="none"></circle>
+          <circle id="punto" r="7" fill="#1F5C8B"></circle>
+          <text id="cero-texto" fill="#1E293B" font-size="13" font-family="Arial, Helvetica, sans-serif" text-anchor="end">energía cero</text>
+          <text id="y-titulo" fill="#1F5C8B" font-size="14" font-weight="700" font-family="Arial, Helvetica, sans-serif" text-anchor="middle">energía potencial</text>
+          <text id="x-titulo" fill="#1F5C8B" font-size="14" font-weight="700" font-family="Arial, Helvetica, sans-serif" text-anchor="middle">distancia entre núcleos</text>
+          <text id="zona-cerca" fill="#C0392B" font-size="13" font-family="Arial, Helvetica, sans-serif" text-anchor="start">cerca</text>
+          <text id="zona-enlace" fill="#2E8B57" font-size="13" font-weight="700" font-family="Arial, Helvetica, sans-serif" text-anchor="middle">enlace</text>
+          <text id="zona-lejos" fill="#1E293B" font-size="13" font-family="Arial, Helvetica, sans-serif" text-anchor="end">lejos</text>
+          <defs>
+            <marker id="punta-flecha" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+              <polygon points="0,0 10,4 0,8" fill="#E07A1F"></polygon>
+            </marker>
+          </defs>
+        </svg>
+        <p class="nota">Más abajo en la curva, menor energía. El cero es cuando están muy separados. Sin números a propósito.</p>
+      </section>
+
+      <div class="lado">
+        <section class="controles" id="controles" aria-labelledby="controles-titulo">
+          <h2 id="controles-titulo">Controles</h2>
+          <label for="distancia">Distancia entre los núcleos</label>
+          <p class="ayuda" id="distancia-ayuda">Arrastrá las esferas, el punto del gráfico o este deslizador. Con el teclado, usá las flechas.</p>
+          <p class="estado" id="estado" data-zone="lejos">Lejos</p>
+          <input id="distancia" type="range" min="0" max="1000" value="900" step="1" aria-describedby="distancia-ayuda" aria-valuemin="0" aria-valuemax="1000" aria-valuenow="900" aria-valuetext="Lejos. No hay interacción.">
+          <div class="botones">
+            <button type="button" class="primario" id="soltar">Soltar</button>
+            <button type="button" class="secundario" id="separar">Separar del todo</button>
+          </div>
+          <p class="tip" id="tip">Antes de arrastrar, anotá en la guía qué creés que pasa si los acercás todo lo posible.</p>
+        </section>
+
+        <section class="viendo" aria-labelledby="viendo-titulo" aria-live="polite">
+          <h2 id="viendo-titulo">Qué estás viendo</h2>
+          <p><span class="tag sub">Submicro</span> <span id="linea-sub">No hay interacción: energía cero.</span></p>
+          <p><span class="tag mac">Macro</span> <span id="linea-mac">No forman un enlace: no se intercambia energía.</span></p>
+          <p><span class="tag sim">Simbólico</span> <span class="simbolo" id="linea-sim">H· &nbsp;+&nbsp; H·</span></p>
+        </section>
+
+        <div class="fila-botones">
+          <button type="button" class="secundario" id="reiniciar">Reiniciar</button>
+          <button type="button" class="secundario" id="abrir-guia">Guía de trabajo</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p id="aviso-flecha" class="sr-only" aria-live="polite"></p>
+
+  <dialog id="guia" aria-labelledby="guia-titulo">
+    <div class="guia-top">
+      <div>
+        <p class="guia-kicker">Química 5.º · Uniones químicas · Clase 04</p>
+        <h2 id="guia-titulo">Guía de trabajo</h2>
+      </div>
+      <button type="button" class="secundario cerrar no-print" id="cerrar-guia">Cerrar</button>
+    </div>
+    <div class="guia-body">
+      <p class="datos"><strong>Nombre:</strong> <span>&nbsp;</span> <strong>Curso:</strong> <span>&nbsp;</span></p>
+      <p>Respondé en orden. La pregunta 1 es una predicción: anotala antes de mover el simulador.</p>
+      <ol>
+        <li>
+          <span class="tipo antes">Predicción · antes de tocar</span>
+          Si acercás los átomos todo lo posible, ¿qué pasa con la energía?
+          <div class="linea"></div>
+          <div class="linea"></div>
+          <div class="linea"></div>
+        </li>
+        <li>
+          <span class="tipo">Observación</span>
+          Llevá los átomos desde lejos hasta el mínimo de la curva. ¿La energía sube o baja? ¿Qué aparece entre las esferas?
+          <div class="linea"></div>
+          <div class="linea"></div>
+          <div class="linea"></div>
+        </li>
+        <li>
+          <span class="tipo">Observación</span>
+          Apretá «Separar del todo». ¿La flecha indica que se entrega o que se libera energía?
+          <div class="linea"></div>
+          <div class="linea"></div>
+          <div class="linea"></div>
+        </li>
+        <li>
+          <span class="tipo">Explicación</span>
+          ¿Romper el enlace libera o absorbe energía? Justificá con el gráfico.
+          <div class="linea"></div>
+          <div class="linea"></div>
+          <div class="linea"></div>
+        </li>
+        <li>
+          <span class="tipo">Transferencia</span>
+          Si dos átomos de otro elemento se tocan, ¿eso alcanza para que queden unidos? ¿Qué tendría que mostrar la energía?
+          <div class="linea"></div>
+          <div class="linea"></div>
+          <div class="linea"></div>
+        </li>
+      </ol>
+      <div class="guia-acciones no-print">
+        <button type="button" class="primario" id="imprimir">Imprimir guía</button>
+      </div>
+    </div>
+  </dialog>
+
+  <script>
+    (function () {
+      var R_MIN = 0.58;
+      var R_MAX = 3.4;
+      var RE = 1;
+      var ANCHO = 2.2;
+      var R_INICIO = 3.2;
+      var RADIO = 34;
+      var CY = 96;
+      var CX = 320;
+      var SEP_MIN = 46;
+      var SEP_MAX = 300;
+
+      var G = { x0: 52, x1: 612, y0: 26, y1: 236, eHi: 1.55, eLo: -1.18 };
+
+      if (window.__simCtrl) window.__simCtrl.abort();
+      var ctrl = new AbortController();
+      window.__simCtrl = ctrl;
+      var opt = { signal: ctrl.signal };
+      if (window.__simRaf) cancelAnimationFrame(window.__simRaf);
+
+      var reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
+      var quieto = reduced.matches;
+      reduced.addEventListener("change", function (ev) { quieto = ev.matches; }, opt);
+
+      var slider = document.getElementById("distancia");
+      var estado = document.getElementById("estado");
+      var lineaSub = document.getElementById("linea-sub");
+      var lineaMac = document.getElementById("linea-mac");
+      var lineaSim = document.getElementById("linea-sim");
+      var tip = document.getElementById("tip");
+      var aviso = document.getElementById("aviso-flecha");
+      var atomosDesc = document.getElementById("atomos-desc");
+      var graficoDesc = document.getElementById("grafico-desc");
+
+      var izq = document.getElementById("atomo-izq");
+      var der = document.getElementById("atomo-der");
+      var letraI = document.getElementById("letra-izq");
+      var letraD = document.getElementById("letra-der");
+      var nube = document.getElementById("nube");
+      var nubeTexto = document.getElementById("nube-texto");
+      var repelTexto = document.getElementById("repel-texto");
+
+      var curva = document.getElementById("curva");
+      var punto = document.getElementById("punto");
+      var halo = document.getElementById("halo");
+      var hito = document.getElementById("hito");
+      var hitoTexto = document.getElementById("hito-texto");
+      var flecha = document.getElementById("flecha");
+      var flechaLinea = document.getElementById("flecha-linea");
+      var flechaCaja = document.getElementById("flecha-caja");
+      var flechaL1 = document.getElementById("flecha-l1");
+      var flechaL2 = document.getElementById("flecha-l2");
+
+      var r = R_INICIO;
+      var mostrarFlecha = false;
+      var anim = 0;
+      var ultimaClave = "";
+      var arrastrando = false;
+
+      var TEXTOS = {
+        lejos: {
+          nombre: "Lejos",
+          sub: "No hay interacción: energía cero.",
+          mac: "No forman un enlace: no se intercambia energía.",
+          sim: "H·  +  H·",
+          aria: "Lejos. No hay interacción: energía cero.",
+          atomos: "Dos esferas separadas, sin densidad compartida."
+        },
+        acercando: {
+          nombre: "Se están atrayendo",
+          sub: "Cada núcleo atrae los electrones del otro: la energía baja.",
+          mac: "Al unirse, la energía del par disminuye.",
+          sim: "H·  ···  H·",
+          aria: "Se están atrayendo. La energía baja.",
+          atomos: "Los átomos se acercan. Cada núcleo atrae los electrones del otro."
+        },
+        minimo: {
+          nombre: "Distancia de enlace",
+          sub: "Distancia de enlace: menor energía.",
+          mac: "Es el arreglo más estable: por eso se quedan juntos.",
+          sim: "H—H",
+          aria: "Distancia de enlace. Menor energía del par.",
+          atomos: "Cerca del mínimo hay una zona sombreada de densidad electrónica compartida entre las esferas."
+        },
+        cerca: {
+          nombre: "Demasiado cerca",
+          sub: "Se repelen los núcleos: la energía sube de golpe.",
+          mac: "Juntarlos más pide energía; no los une mejor.",
+          sim: "H—H demasiado juntos",
+          aria: "Demasiado cerca. Los núcleos se repelen y la energía sube.",
+          atomos: "Las esferas se superponen. Los núcleos se repelen y no hay densidad compartida estable."
+        }
+      };
+
+      function energia(rr) {
+        var x = 1 - Math.exp(-ANCHO * (rr - RE));
+        return x * x - 1;
+      }
+
+      function zona(rr) {
+        if (rr < 0.78) return "cerca";
+        if (rr <= 1.22) return "minimo";
+        if (rr <= 2.5) return "acercando";
+        return "lejos";
+      }
+
+      function acotar(v, a, b) { return Math.max(a, Math.min(b, v)); }
+
+      function sepDe(rr) {
+        var t = (rr - R_MIN) / (R_MAX - R_MIN);
+        var u = Math.sqrt(acotar(t, 0, 1));
+        return SEP_MIN + u * (SEP_MAX - SEP_MIN);
+      }
+
+      function rDeSep(sep) {
+        var u = (sep - SEP_MIN) / (SEP_MAX - SEP_MIN);
+        u = acotar(u, 0, 1);
+        return R_MIN + u * u * (R_MAX - R_MIN);
+      }
+
+      function xDeR(rr) {
+        var t = (rr - R_MIN) / (R_MAX - R_MIN);
+        return G.x0 + acotar(t, 0, 1) * (G.x1 - G.x0);
+      }
+
+      function rDeX(x) {
+        var t = (x - G.x0) / (G.x1 - G.x0);
+        return acotar(R_MIN + t * (R_MAX - R_MIN), R_MIN, R_MAX);
+      }
+
+      function yDeE(e) {
+        var ee = acotar(e, G.eLo, G.eHi);
+        return G.y0 + (G.eHi - ee) / (G.eHi - G.eLo) * (G.y1 - G.y0);
+      }
+
+      function puntoSvg(svg, clienteX, clienteY) {
+        var pt = svg.createSVGPoint();
+        pt.x = clienteX;
+        pt.y = clienteY;
+        var ctm = svg.getScreenCTM();
+        if (!ctm) return { x: 0, y: 0 };
+        return pt.matrixTransform(ctm.inverse());
+      }
+
+      function nubeOpacidad(rr) {
+        var d = Math.abs(rr - RE);
+        var ancho = 0.2;
+        if (d >= ancho) return 0;
+        var u = 1 - d / ancho;
+        return 0.25 + u * u * 0.75;
+      }
+
+      function cancelar() { anim += 1; }
+
+      function ocultarTip() { tip.hidden = true; }
+
+      function syncSlider() {
+        var v = Math.round((r - R_MIN) / (R_MAX - R_MIN) * 1000);
+        slider.value = String(v);
+        slider.setAttribute("aria-valuenow", String(v));
+        slider.setAttribute("aria-valuetext", TEXTOS[zona(r)].aria);
+      }
+
+      function armarCurva() {
+        var d = "";
+        var empezado = false;
+        var n = 280;
+        var i, rr, e, x, y;
+        for (i = 0; i <= n; i += 1) {
+          rr = R_MIN + (i / n) * (R_MAX - R_MIN);
+          e = energia(rr);
+          if (e > G.eHi) {
+            empezado = false;
+            continue;
+          }
+          x = xDeR(rr);
+          y = yDeE(e);
+          d += (empezado ? "L" : "M") + x.toFixed(2) + " " + y.toFixed(2) + " ";
+          empezado = true;
+        }
+        curva.setAttribute("d", d);
+      }
+
+      function armarEjes() {
+        var y0 = yDeE(0);
+        var xRe = xDeR(RE);
+        var yMin = yDeE(energia(RE));
+        document.getElementById("cero").setAttribute("x1", G.x0);
+        document.getElementById("cero").setAttribute("x2", G.x1);
+        document.getElementById("cero").setAttribute("y1", y0);
+        document.getElementById("cero").setAttribute("y2", y0);
+        document.getElementById("eje-y").setAttribute("x1", G.x0);
+        document.getElementById("eje-y").setAttribute("x2", G.x0);
+        document.getElementById("eje-y").setAttribute("y1", G.y1);
+        document.getElementById("eje-y").setAttribute("y2", G.y0 + 10);
+        document.getElementById("eje-x").setAttribute("x1", G.x0);
+        document.getElementById("eje-x").setAttribute("x2", G.x1 - 8);
+        document.getElementById("eje-x").setAttribute("y1", G.y1);
+        document.getElementById("eje-x").setAttribute("y2", G.y1);
+        document.getElementById("punta-y").setAttribute("points",
+          (G.x0 - 5) + "," + (G.y0 + 12) + " " + G.x0 + "," + G.y0 + " " + (G.x0 + 5) + "," + (G.y0 + 12));
+        document.getElementById("punta-x").setAttribute("points",
+          (G.x1 - 14) + "," + (G.y1 - 5) + " " + (G.x1 + 2) + "," + G.y1 + " " + (G.x1 - 14) + "," + (G.y1 + 5));
+
+        document.getElementById("cero-texto").setAttribute("x", G.x1 - 8);
+        document.getElementById("cero-texto").setAttribute("y", y0 - 26);
+        document.getElementById("y-titulo").setAttribute("transform", "translate(16,140) rotate(-90)");
+        document.getElementById("x-titulo").setAttribute("x", (G.x0 + G.x1) / 2);
+        document.getElementById("x-titulo").setAttribute("y", G.y1 + 28);
+        document.getElementById("zona-cerca").setAttribute("x", G.x0);
+        document.getElementById("zona-cerca").setAttribute("y", G.y1 + 50);
+        document.getElementById("zona-enlace").setAttribute("x", xRe);
+        document.getElementById("zona-enlace").setAttribute("y", G.y1 + 50);
+        document.getElementById("zona-lejos").setAttribute("x", G.x1);
+        document.getElementById("zona-lejos").setAttribute("y", G.y1 + 50);
+
+        hito.setAttribute("cx", xRe);
+        hito.setAttribute("cy", yMin);
+        hitoTexto.setAttribute("x", xRe + 12);
+        hitoTexto.setAttribute("y", yMin - 12);
+
+        flechaLinea.setAttribute("x1", xRe);
+        flechaLinea.setAttribute("x2", xRe);
+        flechaLinea.setAttribute("y1", yMin - 4);
+        flechaLinea.setAttribute("y2", y0 + 4);
+        var cajaX = xRe + 18;
+        var cajaY = y0 - 72;
+        flechaCaja.setAttribute("x", cajaX);
+        flechaCaja.setAttribute("y", cajaY);
+        flechaCaja.setAttribute("width", 268);
+        flechaCaja.setAttribute("height", 50);
+        flechaL1.setAttribute("x", cajaX + 12);
+        flechaL1.setAttribute("y", cajaY + 22);
+        flechaL2.setAttribute("x", cajaX + 12);
+        flechaL2.setAttribute("y", cajaY + 40);
+      }
+
+      function ponerTextos(z) {
+        var t = TEXTOS[z];
+        var clave = z + (mostrarFlecha ? "-f" : "");
+        estado.textContent = t.nombre;
+        estado.dataset.zone = z;
+        if (clave === ultimaClave) return;
+        ultimaClave = clave;
+        lineaSub.textContent = t.sub;
+        lineaMac.textContent = t.mac;
+        lineaSim.textContent = t.sim;
+        atomosDesc.textContent = t.atomos;
+        var extra = mostrarFlecha ? " La flecha muestra que hay que entregar energía para romper el enlace." : "";
+        graficoDesc.textContent = "Curva cualitativa de energía potencial, sin números. " + t.aria + extra;
+        aviso.textContent = mostrarFlecha ? "Hay que entregar energía para romper el enlace." : "";
+      }
+
+      function dibujar() {
+        var sep = sepDe(r);
+        var medio = sep / 2;
+        var x1 = CX - medio;
+        var x2 = CX + medio;
+        var z = zona(r);
+        var caliente = z === "cerca";
+        var relleno = caliente ? "url(#esfera-caliente)" : "url(#esfera)";
+        var borde = caliente ? "#C0392B" : "#1F5C8B";
+
+        izq.setAttribute("cx", x1);
+        der.setAttribute("cx", x2);
+        izq.setAttribute("fill", relleno);
+        der.setAttribute("fill", relleno);
+        izq.setAttribute("stroke", borde);
+        der.setAttribute("stroke", borde);
+        letraI.setAttribute("x", x1);
+        letraD.setAttribute("x", x2);
+
+        var op = nubeOpacidad(r);
+        var rx = Math.max(16, medio - RADIO * 0.28);
+        nube.setAttribute("rx", rx);
+        nube.setAttribute("opacity", op.toFixed(3));
+        nubeTexto.setAttribute("opacity", op > 0.2 ? "1" : "0");
+        repelTexto.setAttribute("opacity", caliente ? "1" : "0");
+
+        var e = energia(r);
+        var px = xDeR(r);
+        var py = yDeE(e);
+        halo.setAttribute("cx", px);
+        halo.setAttribute("cy", py);
+        punto.setAttribute("cx", px);
+        punto.setAttribute("cy", py);
+        var color = z === "minimo" ? "#2E8B57" : z === "cerca" ? "#C0392B" : z === "acercando" ? "#E07A1F" : "#1F5C8B";
+        punto.setAttribute("fill", color);
+        flecha.setAttribute("visibility", mostrarFlecha ? "visible" : "hidden");
+
+        ponerTextos(z);
+        syncSlider();
+      }
+
+      function irAnimado(destino, duracion, alFinal) {
+        cancelar();
+        var token = anim;
+        if (quieto) {
+          r = destino;
+          if (alFinal) alFinal();
+          dibujar();
+          return;
+        }
+        var desde = r;
+        var t0 = performance.now();
+        function frame(ahora) {
+          if (token !== anim) return;
+          var t = Math.min(1, (ahora - t0) / duracion);
+          var s = 1 - Math.pow(1 - t, 3);
+          r = desde + (destino - desde) * s;
+          dibujar();
+          if (t < 1) window.__simRaf = requestAnimationFrame(frame);
+          else {
+            r = destino;
+            if (alFinal) alFinal();
+            dibujar();
+          }
+        }
+        window.__simRaf = requestAnimationFrame(frame);
+      }
+
+      function soltar() {
+        ocultarTip();
+        mostrarFlecha = false;
+        aviso.textContent = "";
+        ultimaClave = "";
+        irAnimado(RE, 900, null);
+      }
+
+      function separar() {
+        ocultarTip();
+        mostrarFlecha = true;
+        ultimaClave = "";
+        irAnimado(R_MAX, 1100, null);
+      }
+
+      function reiniciar() {
+        cancelar();
+        mostrarFlecha = false;
+        r = R_INICIO;
+        tip.hidden = false;
+        ultimaClave = "";
+        aviso.textContent = "";
+        dibujar();
+      }
+
+      function desdePunteroAtomos(ev) {
+        var p = puntoSvg(document.getElementById("atomos"), ev.clientX, ev.clientY);
+        r = rDeSep(Math.abs(p.x - CX) * 2);
+        dibujar();
+      }
+
+      function desdePunteroGrafico(ev) {
+        var p = puntoSvg(document.getElementById("grafico"), ev.clientX, ev.clientY);
+        r = rDeX(p.x);
+        dibujar();
+      }
+
+      function enganchar(svg, aplicar) {
+        svg.addEventListener("pointerdown", function (ev) {
+          if (ev.button !== undefined && ev.button !== 0) return;
+          arrastrando = true;
+          cancelar();
+          ocultarTip();
+          svg.setPointerCapture(ev.pointerId);
+          aplicar(ev);
+        }, opt);
+        svg.addEventListener("pointermove", function (ev) {
+          if (!arrastrando) return;
+          aplicar(ev);
+        }, opt);
+        function soltarPuntero() { arrastrando = false; }
+        svg.addEventListener("pointerup", soltarPuntero, opt);
+        svg.addEventListener("pointercancel", soltarPuntero, opt);
+      }
+
+      slider.addEventListener("input", function () {
+        cancelar();
+        ocultarTip();
+        r = R_MIN + (Number(slider.value) / 1000) * (R_MAX - R_MIN);
+        dibujar();
+      }, opt);
+
+      document.getElementById("soltar").addEventListener("click", soltar, opt);
+      document.getElementById("separar").addEventListener("click", separar, opt);
+      document.getElementById("reiniciar").addEventListener("click", reiniciar, opt);
+
+      var guia = document.getElementById("guia");
+      var abrir = document.getElementById("abrir-guia");
+      document.getElementById("abrir-guia").addEventListener("click", function () { guia.showModal(); }, opt);
+      document.getElementById("cerrar-guia").addEventListener("click", function () { guia.close(); }, opt);
+      document.getElementById("imprimir").addEventListener("click", function () { window.print(); }, opt);
+      guia.addEventListener("click", function (ev) {
+        if (ev.target === guia) guia.close();
+      }, opt);
+      guia.addEventListener("close", function () { abrir.focus(); }, opt);
+
+      enganchar(document.getElementById("atomos"), desdePunteroAtomos);
+      enganchar(document.getElementById("grafico"), desdePunteroGrafico);
+
+      armarCurva();
+      armarEjes();
+      dibujar();
+    })();
+  </script>
+</body>
+</html>
+<!--
+Datos usados
+- No se adjuntó el JSON de Chang (12.ª ed.). Por eso no hay longitud de enlace ni entalpía del H–H:
+  no salen de ninguna figura ni tabla, y los ejes del gráfico no tienen números.
+- La curva es solo cualitativa (pozo: energía de referencia nula con los átomos muy separados,
+  mínimo en la distancia de enlace, subida brusca si los núcleos se acercan demasiado).
+  El ancho del pozo es un parámetro de dibujo, no un dato experimental.
+- No se usa diferencia de electronegatividad ni un corte numérico de ionicidad.
+-->

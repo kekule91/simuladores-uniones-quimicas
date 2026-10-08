@@ -1,1 +1,1416 @@
-$file:/workspace/simuladores-uniones/simuladores/sim-c10-ebullicion/index.html
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>¿Qué se rompe cuando hierve?</title>
+  <style>
+    :root {
+      --azul: #1F5C8B;
+      --texto: #1E293B;
+      --acento: #E07A1F;
+      --ok: #2E8B57;
+      --error: #C0392B;
+      --panel: #EEF4F9;
+      --borde: #D8E2EC;
+      --viendo: #FFF4EA;
+      --sub: #6D4AA8;
+      --radio: 16px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      background: #FFFFFF;
+      color: var(--texto);
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 16px;
+      line-height: 1.45;
+    }
+
+    .barra {
+      height: 6px;
+      background: var(--azul);
+    }
+
+    .pagina {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 12px 16px 20px;
+    }
+
+    .skip {
+      position: absolute;
+      left: 12px;
+      top: -48px;
+      background: #fff;
+      color: var(--azul);
+      padding: 8px 12px;
+      border-radius: 12px;
+      z-index: 5;
+    }
+
+    .skip:focus { top: 12px; }
+
+    .kicker {
+      margin: 0 0 6px;
+      color: var(--acento);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0 0 4px;
+      color: var(--azul);
+      font-size: 1.55rem;
+      line-height: 1.15;
+      font-weight: 700;
+    }
+
+    .consigna {
+      margin: 0;
+      max-width: 46rem;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.55fr) minmax(260px, 0.78fr);
+      gap: 14px;
+      margin-top: 12px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--borde);
+      border-radius: var(--radio);
+      padding: 10px 12px;
+    }
+
+    .escenarios {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    .escenarios.dos {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .vaso[hidden] { display: none; }
+
+    .vaso-titulo {
+      margin: 0 0 8px;
+      color: var(--azul);
+      font-size: 1rem;
+    }
+
+    .vaso-cuerpo {
+      display: flex;
+      gap: 8px;
+      align-items: stretch;
+    }
+
+    .lienzo {
+      flex: 1 1 auto;
+      min-width: 0;
+      height: 300px;
+      background: #F7FBFE;
+      border-radius: 14px;
+      border: 1px solid var(--borde);
+    }
+
+    .escenarios.dos .lienzo { height: 280px; }
+
+    .lienzo svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .termo {
+      width: 78px;
+      flex: 0 0 78px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .tubo-caja {
+      flex: 1 1 auto;
+      width: 22px;
+      min-height: 120px;
+      background: #fff;
+      border: 2px solid var(--azul);
+      border-radius: 12px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .nivel {
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: 100%;
+      height: 0;
+      background: var(--acento);
+      border-radius: 0 0 8px 8px;
+    }
+
+    .marca {
+      position: absolute;
+      left: -8px;
+      right: -8px;
+      height: 0;
+      border-top: 3px solid var(--ok);
+    }
+
+    .termo-estado {
+      margin: 0;
+      font-weight: 700;
+      font-size: 0.85rem;
+      text-align: center;
+    }
+
+    .termo-estado.gas { color: var(--acento); }
+    .termo-estado.liq { color: var(--azul); }
+
+    .termo-num, .termo-eb {
+      margin: 0;
+      font-size: 0.78rem;
+      text-align: center;
+      font-weight: 700;
+    }
+
+    .termo-eb { color: var(--ok); font-weight: 700; }
+
+    .leyenda {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px 14px;
+      list-style: none;
+      margin: 8px 0 0;
+      padding: 0;
+      font-size: 0.86rem;
+    }
+
+    .leyenda li { display: flex; align-items: center; gap: 8px; }
+
+    .muestra {
+      width: 36px;
+      height: 0;
+      border-top: 3px solid #1E293B;
+      flex: 0 0 36px;
+    }
+
+    .muestra.puente { border-top: 3px dashed var(--sub); }
+    .muestra.atra { border-top: 2px dashed #5B7C99; }
+
+    .nota-modelo {
+      margin: 4px 0 0;
+      font-size: 0.82rem;
+    }
+
+    .viendo {
+      margin-top: 8px;
+      background: var(--viendo);
+      border: 1px solid #F0D7BE;
+      border-radius: var(--radio);
+      padding: 8px 12px;
+    }
+
+    .viendo h2 {
+      margin: 0 0 4px;
+      font-size: 1rem;
+      color: var(--azul);
+    }
+
+    .viendo p {
+      margin: 0 0 3px;
+    }
+
+    .viendo p:last-child { margin-bottom: 0; }
+
+    .tag {
+      font-weight: 700;
+      margin-right: 4px;
+    }
+
+    .tag-macro { color: var(--ok); }
+    .tag-sub { color: var(--sub); }
+    .tag-sim { color: var(--acento); }
+
+    .controles h2 {
+      margin: 0 0 6px;
+      font-size: 1.05rem;
+      color: var(--azul);
+    }
+
+    .aviso {
+      margin: 0 0 8px;
+      padding: 8px 10px;
+      background: #fff;
+      border: 1px solid var(--borde);
+      border-left: 4px solid var(--acento);
+      border-radius: 12px;
+      font-size: 0.92rem;
+    }
+
+    fieldset {
+      margin: 0 0 8px;
+      padding: 8px;
+      border: 1px solid var(--borde);
+      border-radius: 14px;
+      background: #fff;
+    }
+
+    legend {
+      padding: 0 6px;
+      font-weight: 700;
+      color: var(--azul);
+    }
+
+    .sustancias {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .chip {
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border: 2px solid var(--borde);
+      border-radius: 14px;
+      background: #fff;
+      cursor: pointer;
+    }
+
+    .chip input {
+      width: 20px;
+      height: 20px;
+      accent-color: var(--acento);
+    }
+
+    .chip:has(input:checked) {
+      background: var(--azul);
+      border-color: var(--azul);
+      color: #fff;
+    }
+
+    fieldset:disabled .chip {
+      cursor: default;
+      opacity: 0.72;
+    }
+
+    .comparando .chip[data-id="H2O"],
+    .comparando .chip[data-id="H2S"] {
+      opacity: 1;
+      background: #E7F0F8;
+      border-color: var(--azul);
+      color: var(--texto);
+    }
+
+    .fuerza-linea {
+      margin: 0 0 8px;
+      min-height: 1.3em;
+      font-size: 0.92rem;
+    }
+
+    .temp-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 8px;
+      font-weight: 700;
+      color: var(--azul);
+    }
+
+    output { font-variant-numeric: tabular-nums; }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 44px;
+      background: transparent;
+      margin: 4px 0;
+    }
+
+    input[type="range"]:focus-visible {
+      outline: 3px solid var(--acento);
+      outline-offset: 2px;
+      border-radius: 8px;
+    }
+
+    input[type="range"]::-webkit-slider-runnable-track {
+      height: 8px;
+      background: #D8E2EC;
+      border-radius: 8px;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 32px;
+      height: 32px;
+      margin-top: -12px;
+      border-radius: 50%;
+      background: var(--azul);
+      border: 3px solid #fff;
+      box-shadow: 0 0 0 2px var(--azul);
+    }
+
+    input[type="range"]::-moz-range-track {
+      height: 8px;
+      background: #D8E2EC;
+      border-radius: 8px;
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--azul);
+      border: 3px solid #fff;
+      box-shadow: 0 0 0 2px var(--azul);
+    }
+
+    .ayuda {
+      margin: 0 0 8px;
+      font-size: 0.82rem;
+    }
+
+    .botones {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .btn {
+      min-height: 44px;
+      padding: 10px 14px;
+      border-radius: 14px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background: var(--azul);
+      color: #fff;
+      border: 2px solid var(--azul);
+    }
+
+    .btn-secondary {
+      background: #fff;
+      color: var(--azul);
+      border: 2px solid var(--azul);
+    }
+
+    .btn:hover { filter: brightness(1.05); }
+    .btn:active { transform: translateY(1px); }
+
+    .btn-fila {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-fila .btn { flex: 1 1 0; }
+
+    :focus-visible {
+      outline: 3px solid var(--acento);
+      outline-offset: 2px;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    dialog {
+      width: min(640px, calc(100% - 24px));
+      max-height: min(88vh, 900px);
+      overflow: auto;
+      border: 1px solid var(--borde);
+      border-radius: 18px;
+      padding: 18px 18px 16px;
+      color: var(--texto);
+      background: #fff;
+    }
+
+    dialog::backdrop { background: rgba(30, 41, 59, 0.45); }
+
+    dialog h2 {
+      margin: 0 0 6px;
+      color: var(--azul);
+    }
+
+    .tipo {
+      margin: 0 0 4px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--acento);
+    }
+
+    .preg { margin: 0 0 8px; }
+
+    ol.guia { margin: 10px 0 0; padding-left: 1.2rem; }
+    ol.guia li { margin: 0 0 14px; }
+
+    .nombre-linea { margin: 8px 0 12px; }
+
+    textarea {
+      width: 100%;
+      min-height: 68px;
+      border: 1px solid var(--borde);
+      border-radius: 12px;
+      padding: 8px 10px;
+      font: inherit;
+      color: var(--texto);
+      resize: vertical;
+    }
+
+    .fuente {
+      margin: 12px 0 0;
+      font-size: 0.82rem;
+    }
+
+    @media (max-width: 860px) {
+      .layout { grid-template-columns: 1fr; }
+      h1 { font-size: 1.4rem; }
+      .lienzo, .escenarios.dos .lienzo { height: 300px; }
+    }
+
+    @media (max-width: 420px) {
+      .pagina { padding: 14px 12px 28px; }
+      .sustancias { grid-template-columns: 1fr; }
+      .vaso-cuerpo { flex-direction: column; }
+      .termo {
+        width: 100%;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 8px 12px;
+      }
+      .tubo-caja {
+        width: 100%;
+        height: 22px;
+        min-height: 22px;
+        flex: 1 1 100%;
+      }
+      .nivel {
+        top: 0;
+        bottom: 0;
+        height: 100% !important;
+        width: 0;
+        border-radius: 8px 0 0 8px;
+      }
+      .marca {
+        top: -6px;
+        bottom: -6px;
+        left: 0;
+        right: auto;
+        width: 0;
+        height: auto;
+        border-top: 0;
+        border-left: 3px solid var(--ok);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .btn:active { transform: none; }
+      .btn:hover { filter: none; }
+    }
+
+    @media print {
+      .barra, .skip, header, .layout, .no-print { display: none !important; }
+      body { background: #fff; }
+      dialog, #guia {
+        display: block !important;
+        position: static !important;
+        width: 100% !important;
+        max-height: none !important;
+        overflow: visible !important;
+        border: none !important;
+        box-shadow: none !important;
+      }
+      dialog::backdrop { display: none !important; }
+      textarea {
+        border: none;
+        border-bottom: 1px solid #1E293B;
+        border-radius: 0;
+        min-height: 52px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="barra"></div>
+  <a class="skip" href="#controles">Ir a los controles</a>
+  <div class="pagina">
+    <header>
+      <p class="kicker">Química 5.º · Uniones químicas · Clase 10</p>
+      <h1>¿Qué se rompe cuando hierve?</h1>
+      <p class="consigna">Arrastrá la temperatura y mirá si se separan las moléculas enteras o se rompen los enlaces de adentro.</p>
+    </header>
+
+    <div class="layout">
+      <section class="panel" aria-label="Simulación">
+        <div id="escenarios" class="escenarios">
+          <article class="vaso" id="vaso-a">
+            <h2 class="vaso-titulo" id="titulo-a">Agua · H₂O</h2>
+            <div class="vaso-cuerpo">
+              <div class="lienzo"><svg id="svg-a" role="img" aria-label="Modelo del agua: moléculas como esferas."></svg></div>
+              <div class="termo" id="termo-a">
+                <div class="tubo-caja" aria-hidden="true">
+                  <div class="nivel" id="nivel-a"></div>
+                  <div class="marca" id="marca-a"></div>
+                </div>
+                <p class="termo-estado liq" id="estado-a">Líquido</p>
+                <p class="termo-num" id="num-a">25 °C</p>
+                <p class="termo-eb" id="eb-a">eb. 100 °C</p>
+              </div>
+            </div>
+          </article>
+          <article class="vaso" id="vaso-b" hidden>
+            <h2 class="vaso-titulo" id="titulo-b">Sulfuro de hidrógeno · H₂S</h2>
+            <div class="vaso-cuerpo">
+              <div class="lienzo"><svg id="svg-b" role="img" aria-label="Modelo del sulfuro de hidrógeno."></svg></div>
+              <div class="termo" id="termo-b">
+                <div class="tubo-caja" aria-hidden="true">
+                  <div class="nivel" id="nivel-b"></div>
+                  <div class="marca" id="marca-b"></div>
+                </div>
+                <p class="termo-estado" id="estado-b">Gas</p>
+                <p class="termo-num" id="num-b">25 °C</p>
+                <p class="termo-eb" id="eb-b">eb. −60 °C</p>
+              </div>
+            </div>
+          </article>
+        </div>
+        <ul class="leyenda">
+          <li><span class="muestra"></span> Enlace dentro de la molécula: no se rompe</li>
+          <li><span class="muestra puente"></span> Puente de hidrógeno entre moléculas</li>
+          <li><span class="muestra atra"></span> Otra atracción entre moléculas, más fina</li>
+        </ul>
+        <p class="nota-modelo">30 moléculas, dibujadas como esferas. Es un modelo, no una foto: la línea punteada nombra una atracción, no una soga.</p>
+        <section class="viendo" id="viendo" aria-labelledby="viendo-titulo">
+          <h2 id="viendo-titulo">Qué estás viendo</h2>
+          <p><span class="tag tag-macro">Macro</span> <span id="t-macro"></span></p>
+          <p><span class="tag tag-sub">Submicro</span> <span id="t-sub"></span></p>
+          <p><span class="tag tag-sim">Simbólico</span> <span id="t-sim"></span></p>
+        </section>
+      </section>
+
+      <aside class="panel controles" id="controles">
+        <h2>Controles</h2>
+        <p class="aviso" id="aviso-guia">Antes de arrastrar, abrí la Guía y respondé la pregunta 1.</p>
+        <fieldset id="field-sust">
+          <legend>Sustancia</legend>
+          <div class="sustancias" id="sustancias">
+            <label class="chip" data-id="H2O"><input type="radio" name="sust" value="H2O" checked> H₂O agua</label>
+            <label class="chip" data-id="H2S"><input type="radio" name="sust" value="H2S"> H₂S</label>
+            <label class="chip" data-id="NH3"><input type="radio" name="sust" value="NH3"> NH₃</label>
+            <label class="chip" data-id="CH4"><input type="radio" name="sust" value="CH4"> CH₄</label>
+          </div>
+        </fieldset>
+        <p class="fuerza-linea" id="fuerza-linea"></p>
+        <label class="temp-label" for="temp">Temperatura <output id="temp-out" for="temp">25 °C</output></label>
+        <input id="temp" type="range" min="-200" max="220" step="1" value="25" aria-describedby="temp-ayuda">
+        <p class="ayuda" id="temp-ayuda">Arrastrá para quedar debajo o muy por encima del punto de ebullición de la Figura 11.6.</p>
+        <div class="botones">
+          <button type="button" class="btn btn-primary" id="btn-comparar" aria-pressed="false">Comparar H₂O y H₂S</button>
+          <button type="button" class="btn btn-secondary" id="btn-pasar">Pasar el punto de ebullición</button>
+          <div class="btn-fila">
+            <button type="button" class="btn btn-secondary" id="btn-reiniciar">Reiniciar</button>
+            <button type="button" class="btn btn-secondary" id="btn-guia">Guía de trabajo</button>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <div class="sr-only" aria-live="polite" id="vivo"></div>
+
+  <dialog id="guia" aria-labelledby="guia-titulo">
+    <p class="kicker">Química 5.º · Uniones químicas · Clase 10</p>
+    <h2 id="guia-titulo">Guía de trabajo</h2>
+    <p class="nombre-linea">Nombre: _______________________ &nbsp; Curso: ___________</p>
+    <p>Respondé la pregunta 1 antes de mover la temperatura.</p>
+    <ol class="guia">
+      <li>
+        <p class="tipo">Predicción · antes de tocar</p>
+        <p class="preg">¿Cuál hierve a mayor temperatura, H₂O o H₂S, si la molécula de H₂S es más pesada? Escribí tu idea y el porqué.</p>
+        <label class="sr-only" for="r1">Respuesta de la predicción</label>
+        <textarea id="r1"></textarea>
+      </li>
+      <li>
+        <p class="tipo">Observación</p>
+        <p class="preg">Elegí una misma temperatura y compará H₂O con H₂S. ¿Cuál sigue con las moléculas juntas abajo y cuál ya llenó el recipiente? Anotá la temperatura y los dos puntos de ebullición.</p>
+        <label class="sr-only" for="r2">Respuesta de la observación de estados</label>
+        <textarea id="r2"></textarea>
+      </li>
+      <li>
+        <p class="tipo">Observación</p>
+        <p class="preg">Cuando una sustancia pasa su punto de ebullición, ¿qué les pasa a las líneas sólidas y a las líneas punteadas?</p>
+        <label class="sr-only" for="r3">Respuesta sobre las líneas</label>
+        <textarea id="r3"></textarea>
+      </li>
+      <li>
+        <p class="tipo">Explicación</p>
+        <p class="preg">¿Qué se rompe al hervir: los enlaces de adentro de la molécula o las atracciones entre moléculas? Explicá con lo que viste.</p>
+        <label class="sr-only" for="r4">Respuesta de la explicación</label>
+        <textarea id="r4"></textarea>
+      </li>
+      <li>
+        <p class="tipo">Transferencia</p>
+        <p class="preg">El vapor de la pava, ¿sigue siendo agua? ¿Lo escribirías H₂O(l) → H₂O(g) o H₂O → H₂ + O₂? ¿Por qué?</p>
+        <label class="sr-only" for="r5">Respuesta de transferencia</label>
+        <textarea id="r5"></textarea>
+      </li>
+    </ol>
+    <p class="fuente">Puntos de ebullición leídos de la Figura 11.6 de Chang y Goldsby, Química, 12.ª ed., p. 471 (precisión de la lectura: ±5 °C).</p>
+    <div class="btn-fila no-print" style="margin-top: 12px;">
+      <button type="button" class="btn btn-secondary" id="btn-imprimir">Imprimir guía</button>
+      <button type="button" class="btn btn-primary" id="btn-cerrar">Cerrar</button>
+    </div>
+  </dialog>
+
+  <noscript><p>Este simulador necesita JavaScript del navegador para mover las moléculas.</p></noscript>
+
+  <script>
+    (function () {
+      "use strict";
+
+      var TMIN = -200;
+      var TMAX = 220;
+      var N = 30;
+
+      /* Únicos números de propiedad: t_eb de la Figura 11.6. */
+      var DATA = {
+        H2O: { eb: 100, formula: "H₂O", titulo: "Agua · H₂O", corto: "el agua", fuerza: "puente", fuerzaTxt: "Entre moléculas: puente de hidrógeno (H unido a O).", noEs: "No es H₂ + O₂" },
+        H2S: { eb: -60, formula: "H₂S", titulo: "Sulfuro de hidrógeno · H₂S", corto: "el H₂S", fuerza: "dipolo", fuerzaTxt: "Entre moléculas: dipolo-dipolo. El H no está unido a N, O ni F: no hay puente como en el agua.", noEs: "No es H₂ + S" },
+        NH3: { eb: -33, formula: "NH₃", titulo: "Amoníaco · NH₃", corto: "el amoníaco", fuerza: "puente", fuerzaTxt: "Entre moléculas: puente de hidrógeno (H unido a N).", noEs: "No es N₂ + H₂" },
+        CH4: { eb: -161, formula: "CH₄", titulo: "Metano · CH₄", corto: "el metano", fuerza: "london", fuerzaTxt: "Molécula apolar. Entre moléculas: fuerzas de London.", noEs: "No es C + H₂" }
+      };
+
+      var RADIO = { H: 7, C: 11, N: 11, O: 11, S: 13 };
+      var COLOR = { H: "#F7F7F5", C: "#2C2C2C", N: "#2F4DB5", O: "#D3453A", S: "#E1C43A" };
+      var STROKE = { H: "#6B7380", C: "#1A1A1A", N: "#1E3380", O: "#8E241C", S: "#7A6A12" };
+      var SHADE = { H: "#D5D8DE", C: "#111111", N: "#1A2C78", O: "#8E241C", S: "#A68E16" };
+
+      var MODELOS = {
+        H2O: {
+          atoms: [{ el: "O", x: 0, y: -2 }, { el: "H", x: -16, y: 12 }, { el: "H", x: 16, y: 12 }],
+          bonds: [[0, 1], [0, 2]], donor: [1, 2], acceptor: 0
+        },
+        H2S: {
+          atoms: [{ el: "S", x: 0, y: -2 }, { el: "H", x: -18, y: 14 }, { el: "H", x: 18, y: 14 }],
+          bonds: [[0, 1], [0, 2]], donor: [1, 2], acceptor: 0
+        },
+        NH3: {
+          atoms: [{ el: "N", x: 0, y: 0 }, { el: "H", x: 0, y: -18 }, { el: "H", x: -16, y: 12 }, { el: "H", x: 16, y: 12 }],
+          bonds: [[0, 1], [0, 2], [0, 3]], donor: [1, 2, 3], acceptor: 0
+        },
+        CH4: {
+          atoms: [{ el: "C", x: 0, y: 0 }, { el: "H", x: 0, y: -20 }, { el: "H", x: -18, y: 2 }, { el: "H", x: 18, y: -2 }, { el: "H", x: 6, y: 18 }],
+          bonds: [[0, 1], [0, 2], [0, 3], [0, 4]], donor: [], acceptor: 0
+        }
+      };
+
+      var state = { T: 25, id: "H2O", comparar: false, guiaVista: false };
+      var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      var mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+      if (mq.addEventListener) mq.addEventListener("change", function () { reduce = mq.matches; });
+
+      var slider = document.getElementById("temp");
+      var tempOut = document.getElementById("temp-out");
+      var escenarios = document.getElementById("escenarios");
+      var field = document.getElementById("field-sust");
+      var fuerzaLinea = document.getElementById("fuerza-linea");
+      var aviso = document.getElementById("aviso-guia");
+      var btnComparar = document.getElementById("btn-comparar");
+      var btnPasar = document.getElementById("btn-pasar");
+      var vivo = document.getElementById("vivo");
+      var guia = document.getElementById("guia");
+      var firma = "";
+
+      function fmt(n) {
+        var v = Math.round(n);
+        return (v < 0 ? "−" : "") + Math.abs(v) + " °C";
+      }
+
+      function pct(t) {
+        return ((t - TMIN) / (TMAX - TMIN)) * 100;
+      }
+
+      function esGasId(id) {
+        return state.T >= DATA[id].eb;
+      }
+
+      function roundRect(ctx, x, y, w, h, r) {
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(x, y, w, h, r);
+        else {
+          ctx.moveTo(x + r, y);
+          ctx.arcTo(x + w, y, x + w, y + h, r);
+          ctx.arcTo(x + w, y + h, x, y + h, r);
+          ctx.arcTo(x, y + h, x, y, r);
+          ctx.arcTo(x, y, x + w, y, r);
+          ctx.closePath();
+        }
+      }
+
+      function metrics(w, h) {
+        var x = 14, y = 12, bw = w - 28, bh = h - 24;
+        return {
+          x: x, y: y, bw: bw, bh: bh, r: 16,
+          x0: x + 12, y0: y + 12, x1: x + bw - 12, y1: y + bh - 12,
+          liquidTop: y + bh * 0.46
+        };
+      }
+
+      function molScale(inner) {
+        var gw = (inner.x1 - inner.x0) / 6;
+        return Math.max(0.52, Math.min(1, gw / 58));
+      }
+
+      function makeMols() {
+        var arr = [];
+        var i;
+        for (i = 0; i < N; i++) arr.push({ i: i, x: 0, y: 0, vx: 0, vy: 0, hx: 0, hy: 0, baseAng: (i * 2.399) % 6.2832, ang: 0 });
+        return arr;
+      }
+
+      function buildScene(key) {
+        return {
+          key: key,
+          id: key === "b" ? "H2S" : "H2O",
+          svg: document.getElementById("svg-" + key),
+          wrap: document.getElementById("vaso-" + key),
+          mols: makeMols(),
+          w: 0, h: 0, inner: null, scale: 1, gw: 40, placed: false
+        };
+      }
+
+      var scenes = [buildScene("a"), buildScene("b")];
+
+      function homes(sc) {
+        var inner = sc.inner;
+        if (!inner) return;
+        var gas = esGasId(sc.id);
+        var scale = sc.scale;
+        var cols = 6, rows = 5;
+        var left, top, gw, gh;
+        if (gas) {
+          left = inner.x0 + 4;
+          var right = inner.x1 - 4;
+          var bot = inner.y1 - 4;
+          top = inner.y0 + 6;
+          gw = (right - left) / cols;
+          gh = (bot - top) / rows;
+        } else {
+          var cell = 60 * scale;
+          var packW = Math.min(inner.x1 - inner.x0 - 8, cols * cell);
+          var packH = Math.min(inner.y1 - inner.liquidTop - 8, rows * cell * 0.9);
+          var mid = (inner.x0 + inner.x1) / 2;
+          left = mid - packW / 2;
+          var bottom = inner.y1 - 6;
+          top = bottom - packH;
+          gw = packW / cols;
+          gh = packH / rows;
+        }
+        sc.gw = gw;
+        var i;
+        for (i = 0; i < sc.mols.length; i++) {
+          var c = i % cols;
+          var r = Math.floor(i / cols);
+          sc.mols[i].hx = left + gw * (c + 0.5);
+          sc.mols[i].hy = top + gh * (r + 0.5);
+        }
+      }
+
+      function resizeScene(sc) {
+        if (sc.wrap.hidden) return;
+        var box = sc.svg.parentElement;
+        var w = box.clientWidth;
+        var h = box.clientHeight;
+        if (w < 8 || h < 8) return;
+        sc.svg.setAttribute("viewBox", "0 0 " + w + " " + h);
+        sc.w = w;
+        sc.h = h;
+        sc.inner = metrics(w, h);
+        sc.scale = molScale(sc.inner);
+        homes(sc);
+        if (!sc.placed) {
+          var i;
+          for (i = 0; i < sc.mols.length; i++) {
+            sc.mols[i].x = sc.mols[i].hx;
+            sc.mols[i].y = sc.mols[i].hy;
+          }
+          sc.placed = true;
+        }
+      }
+
+      function resizeAll() {
+        var i;
+        for (i = 0; i < scenes.length; i++) resizeScene(scenes[i]);
+      }
+
+      function snap(sc) {
+        homes(sc);
+        var i;
+        for (i = 0; i < sc.mols.length; i++) {
+          sc.mols[i].x = sc.mols[i].hx;
+          sc.mols[i].y = sc.mols[i].hy;
+          sc.mols[i].vx = 0;
+          sc.mols[i].vy = 0;
+        }
+      }
+
+      function atomWorld(m, modelo, idx, scale) {
+        var a = modelo.atoms[idx];
+        var c = Math.cos(m.ang);
+        var s = Math.sin(m.ang);
+        var lx = a.x * scale;
+        var ly = a.y * scale;
+        return { x: m.x + lx * c - ly * s, y: m.y + lx * s + ly * c };
+      }
+
+      function drawMol(ctx, m, modelo, scale) {
+        var ang = m.ang;
+        ctx.save();
+        ctx.translate(m.x, m.y);
+        ctx.rotate(ang);
+        ctx.lineWidth = Math.max(1.6, 2.6 * scale);
+        ctx.strokeStyle = "#1E293B";
+        ctx.lineCap = "round";
+        ctx.setLineDash([]);
+        var b;
+        for (b = 0; b < modelo.bonds.length; b++) {
+          var p = modelo.bonds[b];
+          ctx.beginPath();
+          ctx.moveTo(modelo.atoms[p[0]].x * scale, modelo.atoms[p[0]].y * scale);
+          ctx.lineTo(modelo.atoms[p[1]].x * scale, modelo.atoms[p[1]].y * scale);
+          ctx.stroke();
+        }
+        var i;
+        for (i = 0; i < modelo.atoms.length; i++) {
+          var a = modelo.atoms[i];
+          var r = RADIO[a.el] * scale;
+          var ax = a.x * scale;
+          var ay = a.y * scale;
+          var g = ctx.createRadialGradient(ax - r * 0.35, ay - r * 0.4, r * 0.15, ax, ay, r);
+          g.addColorStop(0, "#FFFFFF");
+          g.addColorStop(0.42, COLOR[a.el]);
+          g.addColorStop(1, SHADE[a.el]);
+          ctx.fillStyle = g;
+          ctx.beginPath();
+          ctx.arc(ax, ay, r, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.lineWidth = 1.6;
+          ctx.strokeStyle = STROKE[a.el];
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+
+      function trimLine(a, b, ra, rb) {
+        var dx = b.x - a.x;
+        var dy = b.y - a.y;
+        var d = Math.sqrt(dx * dx + dy * dy) || 1;
+        if (d < ra + rb + 3) return null;
+        var ux = dx / d;
+        var uy = dy / d;
+        return { x1: a.x + ux * ra, y1: a.y + uy * ra, x2: b.x - ux * rb, y2: b.y - uy * rb };
+      }
+
+      function drawAttractions(ctx, sc, modelo) {
+        if (esGasId(sc.id)) return;
+        var fuerza = DATA[sc.id].fuerza;
+        var cutoff = sc.gw * (fuerza === "puente" ? 1.5 : fuerza === "dipolo" ? 1.25 : 1.08);
+        var maxPer = fuerza === "puente" ? 2 : 1;
+        var pairs = [];
+        var i, j;
+        for (i = 0; i < sc.mols.length; i++) {
+          for (j = i + 1; j < sc.mols.length; j++) {
+            var dx = sc.mols[j].x - sc.mols[i].x;
+            var dy = sc.mols[j].y - sc.mols[i].y;
+            var d = Math.sqrt(dx * dx + dy * dy);
+            if (d < cutoff && d > 4) pairs.push({ i: i, j: j, d: d });
+          }
+        }
+        pairs.sort(function (a, b) { return a.d - b.d; });
+        var used = {};
+        var drawn = 0;
+        for (i = 0; i < pairs.length; i++) {
+          var p = pairs[i];
+          if ((used[p.i] || 0) >= maxPer || (used[p.j] || 0) >= maxPer) continue;
+          var a, b;
+          if (fuerza === "puente") {
+            var best = null;
+            var accI = atomWorld(sc.mols[p.i], modelo, modelo.acceptor, sc.scale);
+            var accJ = atomWorld(sc.mols[p.j], modelo, modelo.acceptor, sc.scale);
+            var k;
+            for (k = 0; k < modelo.donor.length; k++) {
+              var H = atomWorld(sc.mols[p.i], modelo, modelo.donor[k], sc.scale);
+              var dd = Math.hypot(H.x - accJ.x, H.y - accJ.y);
+              if (!best || dd < best.d) best = { a: H, b: accJ, ra: RADIO.H * sc.scale, rb: RADIO[modelo.atoms[modelo.acceptor].el] * sc.scale, d: dd };
+            }
+            for (k = 0; k < modelo.donor.length; k++) {
+              var H2 = atomWorld(sc.mols[p.j], modelo, modelo.donor[k], sc.scale);
+              var dd2 = Math.hypot(H2.x - accI.x, H2.y - accI.y);
+              if (!best || dd2 < best.d) best = { a: H2, b: accI, ra: RADIO.H * sc.scale, rb: RADIO[modelo.atoms[modelo.acceptor].el] * sc.scale, d: dd2 };
+            }
+            if (!best) continue;
+            var seg = trimLine(best.a, best.b, best.ra, best.rb);
+            if (!seg) continue;
+            ctx.strokeStyle = "#6D4AA8";
+            ctx.lineWidth = Math.max(2.2, 2.8 * sc.scale);
+            ctx.setLineDash([6, 4]);
+            ctx.beginPath();
+            ctx.moveTo(seg.x1, seg.y1);
+            ctx.lineTo(seg.x2, seg.y2);
+            ctx.stroke();
+          } else {
+            var ra = 16 * sc.scale;
+            var seg2 = trimLine(
+              { x: sc.mols[p.i].x, y: sc.mols[p.i].y },
+              { x: sc.mols[p.j].x, y: sc.mols[p.j].y },
+              ra, ra
+            );
+            if (!seg2) continue;
+            ctx.strokeStyle = fuerza === "dipolo" ? "#3E6280" : "#6E8BA3";
+            ctx.lineWidth = fuerza === "dipolo" ? 1.8 : 1.4;
+            ctx.setLineDash(fuerza === "dipolo" ? [4, 4] : [2, 6]);
+            ctx.beginPath();
+            ctx.moveTo(seg2.x1, seg2.y1);
+            ctx.lineTo(seg2.x2, seg2.y2);
+            ctx.stroke();
+          }
+          used[p.i] = (used[p.i] || 0) + 1;
+          used[p.j] = (used[p.j] || 0) + 1;
+          drawn++;
+          if (drawn > 40) break;
+        }
+        ctx.setLineDash([]);
+      }
+
+      function beakerD(inner) {
+        var x = inner.x, y = inner.y, w = inner.bw, h = inner.bh, r = inner.r;
+        return "M " + (x + r) + " " + y + " H " + (x + w - r) +
+          " Q " + (x + w) + " " + y + " " + (x + w) + " " + (y + r) +
+          " V " + (y + h - r) + " Q " + (x + w) + " " + (y + h) + " " + (x + w - r) + " " + (y + h) +
+          " H " + (x + r) + " Q " + x + " " + (y + h) + " " + x + " " + (y + h - r) +
+          " V " + (y + r) + " Q " + x + " " + y + " " + (x + r) + " " + y + " Z";
+      }
+
+      function n1(v) { return Math.round(v * 10) / 10; }
+
+      function attractionMarkup(sc, modelo) {
+        if (esGasId(sc.id)) return "";
+        var fuerza = DATA[sc.id].fuerza;
+        var cutoff = sc.gw * (fuerza === "puente" ? 1.5 : fuerza === "dipolo" ? 1.25 : 1.08);
+        var maxPer = fuerza === "puente" ? 2 : 1;
+        var pairs = [];
+        var i, j;
+        for (i = 0; i < sc.mols.length; i++) {
+          for (j = i + 1; j < sc.mols.length; j++) {
+            var dx = sc.mols[j].x - sc.mols[i].x;
+            var dy = sc.mols[j].y - sc.mols[i].y;
+            var d = Math.sqrt(dx * dx + dy * dy);
+            if (d < cutoff && d > 4) pairs.push({ i: i, j: j, d: d });
+          }
+        }
+        pairs.sort(function (a, b) { return a.d - b.d; });
+        var used = {};
+        var out = [];
+        var drawn = 0;
+        for (i = 0; i < pairs.length; i++) {
+          var p = pairs[i];
+          if ((used[p.i] || 0) >= maxPer || (used[p.j] || 0) >= maxPer) continue;
+          var seg = null;
+          var color, width, dash;
+          if (fuerza === "puente") {
+            var best = null;
+            var accI = atomWorld(sc.mols[p.i], modelo, modelo.acceptor, sc.scale);
+            var accJ = atomWorld(sc.mols[p.j], modelo, modelo.acceptor, sc.scale);
+            var k;
+            for (k = 0; k < modelo.donor.length; k++) {
+              var H = atomWorld(sc.mols[p.i], modelo, modelo.donor[k], sc.scale);
+              var dd = Math.hypot(H.x - accJ.x, H.y - accJ.y);
+              if (!best || dd < best.d) best = { a: H, b: accJ, ra: RADIO.H * sc.scale, rb: RADIO[modelo.atoms[modelo.acceptor].el] * sc.scale, d: dd };
+            }
+            for (k = 0; k < modelo.donor.length; k++) {
+              var H2 = atomWorld(sc.mols[p.j], modelo, modelo.donor[k], sc.scale);
+              var dd2 = Math.hypot(H2.x - accI.x, H2.y - accI.y);
+              if (!best || dd2 < best.d) best = { a: H2, b: accI, ra: RADIO.H * sc.scale, rb: RADIO[modelo.atoms[modelo.acceptor].el] * sc.scale, d: dd2 };
+            }
+            if (!best) continue;
+            seg = trimLine(best.a, best.b, best.ra, best.rb);
+            color = "#6D4AA8";
+            width = Math.max(2.2, 2.8 * sc.scale);
+            dash = "6 4";
+          } else {
+            seg = trimLine(
+              { x: sc.mols[p.i].x, y: sc.mols[p.i].y },
+              { x: sc.mols[p.j].x, y: sc.mols[p.j].y },
+              16 * sc.scale, 16 * sc.scale
+            );
+            color = fuerza === "dipolo" ? "#3E6280" : "#6E8BA3";
+            width = fuerza === "dipolo" ? 1.8 : 1.4;
+            dash = fuerza === "dipolo" ? "4 4" : "2 6";
+          }
+          if (!seg) continue;
+          out.push('<line x1="' + n1(seg.x1) + '" y1="' + n1(seg.y1) + '" x2="' + n1(seg.x2) + '" y2="' + n1(seg.y2) + '" stroke="' + color + '" stroke-width="' + width + '" stroke-dasharray="' + dash + '" stroke-linecap="round"/>');
+          used[p.i] = (used[p.i] || 0) + 1;
+          used[p.j] = (used[p.j] || 0) + 1;
+          drawn++;
+          if (drawn > 40) break;
+        }
+        return out.join("");
+      }
+
+      function drawScene(sc) {
+        if (sc.wrap.hidden || !sc.w) return;
+        var inner = sc.inner;
+        var modelo = MODELOS[sc.id];
+        var gas = esGasId(sc.id);
+        var scale = sc.scale;
+        var d = beakerD(inner);
+        var html = [];
+        var el;
+        html.push("<defs>");
+        for (el in COLOR) {
+          if (!Object.prototype.hasOwnProperty.call(COLOR, el)) continue;
+          html.push('<radialGradient id="g' + sc.key + el + '" cx="32%" cy="30%" r="70%">');
+          html.push('<stop offset="0%" stop-color="#ffffff"/>');
+          html.push('<stop offset="42%" stop-color="' + COLOR[el] + '"/>');
+          html.push('<stop offset="100%" stop-color="' + SHADE[el] + '"/>');
+          html.push("</radialGradient>");
+        }
+        html.push('<clipPath id="clip' + sc.key + '"><path d="' + d + '"/></clipPath>');
+        html.push("</defs>");
+        html.push('<path d="' + d + '" fill="#F7FBFE"/>');
+        html.push('<g clip-path="url(#clip' + sc.key + ')">');
+        if (!gas) {
+          html.push('<rect x="' + inner.x + '" y="' + inner.liquidTop + '" width="' + inner.bw + '" height="' + (inner.y + inner.bh - inner.liquidTop) + '" fill="rgba(31,92,139,0.07)"/>');
+        }
+        var i, b;
+        for (i = 0; i < sc.mols.length; i++) {
+          var m = sc.mols[i];
+          var deg = (m.ang * 180 / Math.PI).toFixed(1);
+          html.push('<g transform="translate(' + n1(m.x) + " " + n1(m.y) + ") rotate(" + deg + ')">');
+          for (b = 0; b < modelo.bonds.length; b++) {
+            var bond = modelo.bonds[b];
+            var a1 = modelo.atoms[bond[0]];
+            var a2 = modelo.atoms[bond[1]];
+            html.push('<line x1="' + n1(a1.x * scale) + '" y1="' + n1(a1.y * scale) + '" x2="' + n1(a2.x * scale) + '" y2="' + n1(a2.y * scale) + '" stroke="#1E293B" stroke-width="' + n1(Math.max(1.6, 2.6 * scale)) + '" stroke-linecap="round"/>');
+          }
+          for (b = 0; b < modelo.atoms.length; b++) {
+            var a = modelo.atoms[b];
+            html.push('<circle cx="' + n1(a.x * scale) + '" cy="' + n1(a.y * scale) + '" r="' + n1(RADIO[a.el] * scale) + '" fill="url(#g' + sc.key + a.el + ')" stroke="' + STROKE[a.el] + '" stroke-width="1.6"/>');
+          }
+          html.push("</g>");
+        }
+        html.push(attractionMarkup(sc, modelo));
+        html.push("</g>");
+        html.push('<path d="' + d + '" fill="none" stroke="#8FB0CC" stroke-width="2"/>');
+        html.push('<line x1="' + (inner.x + 10) + '" y1="' + (inner.y + 2) + '" x2="' + (inner.x + inner.bw - 10) + '" y2="' + (inner.y + 2) + '" stroke="#1F5C8B" stroke-width="3" stroke-linecap="round"/>');
+        sc.svg.innerHTML = html.join("");
+        sc.svg.setAttribute("aria-label", ariaLienzo(sc.id));
+      }
+
+      function step(sc, now) {
+        if (sc.wrap.hidden || !sc.inner) return;
+        var gas = esGasId(sc.id);
+        var heat = (state.T - TMIN) / (TMAX - TMIN);
+        var amp = reduce ? 0 : (gas ? 8 + heat * 18 : 2 + heat * 5);
+        var inner = sc.inner;
+        var t = now / 1000;
+        var i;
+        for (i = 0; i < sc.mols.length; i++) {
+          var m = sc.mols[i];
+          var tx = m.hx + Math.sin(t * 1.6 + m.i) * amp;
+          var ty = m.hy + Math.cos(t * 1.25 + m.i * 1.4) * amp * 0.85;
+          if (reduce) {
+            m.x = m.hx;
+            m.y = m.hy;
+          } else {
+            var pull = gas ? 0.08 : 0.16;
+            m.vx = (m.vx + (tx - m.x) * pull) * 0.82;
+            m.vy = (m.vy + (ty - m.y) * pull) * 0.82;
+            m.x += m.vx;
+            m.y += m.vy;
+          }
+          m.ang = m.baseAng + (reduce ? 0 : Math.sin(t * 0.85 + m.i) * (gas ? 0.4 : 0.12));
+          var pad = 10;
+          if (m.x < inner.x0 + pad) m.x = inner.x0 + pad;
+          if (m.x > inner.x1 - pad) m.x = inner.x1 - pad;
+          if (m.y < inner.y0 + pad) m.y = inner.y0 + pad;
+          if (m.y > inner.y1 - pad) m.y = inner.y1 - pad;
+        }
+      }
+
+      function ariaLienzo(id) {
+        var d = DATA[id];
+        var gas = esGasId(id);
+        return "Modelo de " + d.formula + ". " + (gas
+          ? "Gas: las moléculas llenan el recipiente y siguen enteras."
+          : "Líquido: moléculas juntas, con atracciones punteadas entre ellas.");
+      }
+
+      function banda(id) {
+        var d = DATA[id];
+        if (state.T >= d.eb + 80) return "muy";
+        if (state.T >= d.eb) return "gas";
+        return "liq";
+      }
+
+      function textos() {
+        var macro, sub, sim;
+        if (state.comparar) {
+          var aguaGas = esGasId("H2O");
+          var sulGas = esGasId("H2S");
+          macro = "A " + fmt(state.T) + " el agua está " + (aguaGas ? "en gas" : "en líquido") + " (eb. 100 °C) y el H₂S está " + (sulGas ? "en gas" : "en líquido") + " (eb. −60 °C).";
+          if (!aguaGas && !sulGas) {
+            sub = "Abajo se ven atracciones. En el agua son puentes de hidrógeno, más marcados que en el H₂S.";
+          } else if (aguaGas && sulGas) {
+            sub = state.T >= 180
+              ? "Aunque subas mucho la temperatura, las dos moléculas siguen enteras: la línea sólida no se corta."
+              : "Ya no hay punteadas. Las líneas sólidas siguen: hervir no parte la molécula.";
+          } else {
+            sub = "En el agua siguen los puentes de hidrógeno. En el H₂S esas atracciones ya se vencieron.";
+          }
+          sim = (aguaGas ? "H₂O(g)" : "H₂O(l)") + " y " + (sulGas ? "H₂S(g)" : "H₂S(l)") + ". No es H₂ + O₂ ni H₂ + S.";
+        } else {
+          var d = DATA[state.id];
+          var gas = esGasId(state.id);
+          var muy = state.T >= d.eb + 80;
+          macro = gas
+            ? "A " + fmt(state.T) + ", " + d.corto + " ya hirvió (eb. " + fmt(d.eb) + "): el gas llena el recipiente."
+            : "A " + fmt(state.T) + ", " + d.corto + " está en líquido. Ebullición: " + fmt(d.eb) + " (Figura 11.6).";
+          if (!gas) {
+            if (d.fuerza === "puente") sub = "Sólidas: enlaces de adentro. Punteadas marcadas: puentes de hidrógeno entre moléculas.";
+            else if (d.fuerza === "dipolo") sub = "Sólidas: enlaces de adentro. Punteadas finas: atracciones dipolo-dipolo entre moléculas.";
+            else sub = "Sólidas: enlaces de adentro. Punteadas muy finas: fuerzas de London entre moléculas.";
+          } else if (muy) {
+            sub = "Aunque subas mucho la temperatura, cada molécula sigue entera: el enlace de adentro no se corta.";
+          } else {
+            sub = "Se vencieron las atracciones entre moléculas. Los enlaces de adentro no se rompieron.";
+          }
+          sim = gas
+            ? d.formula + "(l) → " + d.formula + "(g). " + d.noEs + "."
+            : d.formula + "(l). Al hervir: " + d.formula + "(l) → " + d.formula + "(g).";
+        }
+        document.getElementById("t-macro").textContent = macro;
+        document.getElementById("t-sub").textContent = sub;
+        document.getElementById("t-sim").textContent = sim;
+        var firmaNueva = macro + "|" + sub + "|" + sim;
+        if (firmaNueva !== firma) {
+          firma = firmaNueva;
+          vivo.textContent = "Macro. " + macro + " Submicro. " + sub + " Simbólico. " + sim;
+        }
+      }
+
+      function pintaTermo(suffix, id) {
+        var d = DATA[id];
+        var gas = esGasId(id);
+        var nivel = document.getElementById("nivel-" + suffix);
+        var marca = document.getElementById("marca-" + suffix);
+        var estrecho = window.matchMedia("(max-width: 420px)").matches;
+        if (estrecho) {
+          nivel.style.width = pct(state.T) + "%";
+          nivel.style.height = "100%";
+          marca.style.left = pct(d.eb) + "%";
+          marca.style.bottom = "auto";
+          marca.style.right = "auto";
+        } else {
+          nivel.style.width = "100%";
+          nivel.style.height = pct(state.T) + "%";
+          marca.style.bottom = pct(d.eb) + "%";
+          marca.style.left = "-8px";
+          marca.style.right = "-8px";
+        }
+        var est = document.getElementById("estado-" + suffix);
+        est.textContent = gas ? "Gas" : "Líquido";
+        est.className = "termo-estado " + (gas ? "gas" : "liq");
+        document.getElementById("num-" + suffix).textContent = fmt(state.T);
+        document.getElementById("eb-" + suffix).textContent = "eb. " + fmt(d.eb);
+      }
+
+      function syncUi() {
+        var a = scenes[0];
+        var b = scenes[1];
+        if (state.comparar) {
+          a.id = "H2O";
+          b.id = "H2S";
+          b.wrap.hidden = false;
+          escenarios.classList.add("dos");
+          field.disabled = true;
+          field.classList.add("comparando");
+          document.getElementById("titulo-a").textContent = DATA.H2O.titulo;
+          document.getElementById("titulo-b").textContent = DATA.H2S.titulo;
+          btnComparar.textContent = "Ver una sola sustancia";
+          btnComparar.setAttribute("aria-pressed", "true");
+          btnPasar.textContent = "Pasar el hervor del agua";
+          fuerzaLinea.textContent = "Misma temperatura para las dos. Mirá quién sigue líquido.";
+        } else {
+          a.id = state.id;
+          b.wrap.hidden = true;
+          escenarios.classList.remove("dos");
+          field.disabled = false;
+          field.classList.remove("comparando");
+          document.getElementById("titulo-a").textContent = DATA[state.id].titulo;
+          btnComparar.textContent = "Comparar H₂O y H₂S";
+          btnComparar.setAttribute("aria-pressed", "false");
+          btnPasar.textContent = "Pasar el punto de ebullición";
+          fuerzaLinea.textContent = DATA[state.id].fuerzaTxt;
+        }
+        tempOut.textContent = fmt(state.T);
+        slider.value = String(state.T);
+        var gasTxt = state.comparar
+          ? "agua " + (esGasId("H2O") ? "gas" : "líquido") + ", H₂S " + (esGasId("H2S") ? "gas" : "líquido")
+          : (esGasId(state.id) ? "gas" : "líquido");
+        slider.setAttribute("aria-valuetext", fmt(state.T) + ", " + gasTxt);
+        pintaTermo("a", a.id);
+        if (state.comparar) pintaTermo("b", "H2S");
+        textos();
+        aviso.hidden = state.guiaVista;
+      }
+
+      function onTemp() {
+        state.T = Number(slider.value);
+        homes(scenes[0]);
+        if (state.comparar) homes(scenes[1]);
+        if (reduce) {
+          snap(scenes[0]);
+          if (state.comparar) snap(scenes[1]);
+        }
+        syncUi();
+      }
+
+      document.getElementById("sustancias").addEventListener("change", function (ev) {
+        var t = ev.target;
+        if (!t || t.name !== "sust") return;
+        state.id = t.value;
+        scenes[0].id = state.id;
+        homes(scenes[0]);
+        if (reduce) snap(scenes[0]);
+        syncUi();
+      });
+
+      slider.addEventListener("input", onTemp);
+
+      btnComparar.addEventListener("click", function () {
+        state.comparar = !state.comparar;
+        syncUi();
+        resizeAll();
+        homes(scenes[0]);
+        homes(scenes[1]);
+        if (reduce) {
+          snap(scenes[0]);
+          snap(scenes[1]);
+        }
+        syncUi();
+      });
+
+      btnPasar.addEventListener("click", function () {
+        if (state.comparar) state.T = Math.min(TMAX, 100 + 40);
+        else state.T = Math.min(TMAX, DATA[state.id].eb + 40);
+        slider.value = String(state.T);
+        onTemp();
+      });
+
+      document.getElementById("btn-reiniciar").addEventListener("click", function () {
+        state.T = 25;
+        state.id = "H2O";
+        state.comparar = false;
+        var radios = document.querySelectorAll('input[name="sust"]');
+        var i;
+        for (i = 0; i < radios.length; i++) radios[i].checked = radios[i].value === "H2O";
+        syncUi();
+        resizeAll();
+        snap(scenes[0]);
+        snap(scenes[1]);
+        syncUi();
+      });
+
+      document.getElementById("btn-guia").addEventListener("click", function () {
+        state.guiaVista = true;
+        aviso.hidden = true;
+        if (guia.showModal) guia.showModal();
+      });
+
+      document.getElementById("btn-cerrar").addEventListener("click", function () {
+        guia.close();
+      });
+
+      document.getElementById("btn-imprimir").addEventListener("click", function () {
+        window.print();
+      });
+
+      window.addEventListener("resize", function () {
+        resizeAll();
+        syncUi();
+      });
+
+      var ultimoGas = {};
+      function loop(now) {
+        var i;
+        for (i = 0; i < scenes.length; i++) {
+          var sc = scenes[i];
+          if (sc.wrap.hidden) continue;
+          var g = esGasId(sc.id);
+          if (ultimoGas[sc.key] !== g) {
+            ultimoGas[sc.key] = g;
+            homes(sc);
+            if (reduce) snap(sc);
+          }
+          step(sc, now);
+          drawScene(sc);
+        }
+        requestAnimationFrame(loop);
+      }
+
+      resizeAll();
+      snap(scenes[0]);
+      snap(scenes[1]);
+      syncUi();
+      requestAnimationFrame(loop);
+    })();
+  </script>
+</body>
+</html>
+
+<!--
+Datos usados (únicos valores numéricos de propiedades; no se inventaron otros):
+- H2O  t_eb = 100 °C   Figura 11.6, Chang y Goldsby, Química, 12.ª ed., p. 471
+- H2S  t_eb = −60 °C   Figura 11.6, misma fuente
+- NH3  t_eb = −33 °C   Figura 11.6, misma fuente
+- CH4  t_eb = −161 °C  Figura 11.6, misma fuente
+Lectura de la figura en el material de clase: precisión ±5 °C.
+La escala del deslizador (−200 °C a 220 °C) es del simulador, no un dato del libro:
+sirve para quedar debajo y muy por encima de esos puntos.
+No se usaron masas molares, energías de enlace, ángulos ni electronegatividades.
+No se usó ningún umbral de diferencia de electronegatividad.
+Radios, posiciones y colores de las esferas son de dibujo (convención CPK), no tablas del libro.
+Clasificación cualitativa de la fuerza (puente / dipolo-dipolo / London): recorte de la clase 10,
+sin energías numéricas.
+-->

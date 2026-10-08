@@ -1,1 +1,1949 @@
-$file:/workspace/simuladores-uniones/simuladores/sim-c05-red-ionica/index.html
+<!doctype html>
+<html lang="es-AR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Armá el cristal de NaCl · Química 5.º</title>
+  <meta name="description" content="Simulador educativo de la red cristalina del cloruro de sodio (NaCl), coordinación iónica y estabilidad para secundaria." />
+  <style>
+    /* RESET & VARIABLES BASE */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #FFFFFF;
+      --title: #1F5C8B;
+      --text: #1E293B;
+      --text-muted: #64748B;
+      --accent: #E07A1F;
+      --accent-hover: #C56515;
+      --success: #2E8B57;
+      --error: #C0392B;
+      --panel: #EEF4F9;
+      --panel-see: #FFF4EA;
+      --border: #D8E2EC;
+      --submicro: #6D4AA8;
+      --radius: 14px;
+      --radius-sm: 8px;
+      --radius-lg: 18px;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.45;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* BARRA SUPERIOR AZUL DE 6PX */
+    .top-bar {
+      height: 6px;
+      background-color: var(--title);
+      width: 100%;
+      flex-shrink: 0;
+    }
+
+    /* CONTENEDOR PRINCIPAL */
+    .app-container {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 16px 20px 32px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      flex: 1;
+    }
+
+    /* ENCABEZADO */
+    header {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .topic-tag {
+      font-variant: small-caps;
+      color: var(--accent);
+      font-weight: 700;
+      font-size: 0.95rem;
+      letter-spacing: 0.08em;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    h1 {
+      color: var(--title);
+      font-size: 1.75rem;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
+    .prompt-line {
+      color: var(--text);
+      font-size: 1rem;
+      margin-top: 2px;
+    }
+
+    /* BOTONES */
+    button {
+      font-family: Arial, sans-serif;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      border-radius: var(--radius-sm);
+      min-height: 44px;
+      min-width: 44px;
+      padding: 8px 16px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background-color 0.2s, color 0.2s, border-color 0.2s, transform 0.1s;
+      outline-offset: 2px;
+    }
+
+    button:focus-visible {
+      outline: 3px solid var(--accent);
+    }
+
+    .btn-primary {
+      background-color: var(--title);
+      color: #FFFFFF;
+      border: 2px solid var(--title);
+    }
+    .btn-primary:hover {
+      background-color: #174569;
+      border-color: #174569;
+    }
+
+    .btn-secondary {
+      background-color: transparent;
+      color: var(--title);
+      border: 2px solid var(--title);
+    }
+    .btn-secondary:hover {
+      background-color: #EEF4F9;
+    }
+
+    .btn-accent {
+      background-color: var(--accent);
+      color: #FFFFFF;
+      border: 2px solid var(--accent);
+    }
+    .btn-accent:hover {
+      background-color: var(--accent-hover);
+      border-color: var(--accent-hover);
+    }
+
+    .btn-outline-danger {
+      background-color: transparent;
+      color: var(--error);
+      border: 2px solid var(--border);
+    }
+    .btn-outline-danger:hover {
+      border-color: var(--error);
+      background-color: #FDEDEC;
+    }
+
+    /* LAYOUT PRINCIPAL DE 2 COLUMNAS */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+
+    @media (min-width: 860px) {
+      .main-grid {
+        grid-template-columns: 1.15fr 0.85fr;
+      }
+    }
+
+    /* PANELES GENERALES */
+    .sim-panel, .controls-panel {
+      background-color: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    /* ZONA DE SIMULACIÓN */
+    .sim-panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .sim-panel-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--title);
+    }
+
+    .view-toggle {
+      display: flex;
+      background: #FFFFFF;
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 3px;
+    }
+
+    .view-toggle button {
+      border: none;
+      background: transparent;
+      padding: 6px 14px;
+      min-height: 36px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .view-toggle button.active {
+      background-color: var(--title);
+      color: #FFFFFF;
+    }
+
+    /* BANDEJA DE DISPENSACIÓN DE IONES */
+    .ion-tray {
+      background-color: #FFFFFF;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .tray-label {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .ion-source {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: grab;
+      user-select: none;
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      border: 2px dashed transparent;
+      touch-action: none;
+    }
+
+    .ion-source:focus-visible, .ion-source.selected {
+      border-color: var(--accent);
+      background-color: #FFF8F0;
+    }
+
+    .ion-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      font-weight: 700;
+      color: #FFFFFF;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.18), inset 0 2px 4px rgba(255,255,255,0.4);
+      position: relative;
+    }
+
+    /* Na+ esfera chica violeta (radio Chang: 102 pm) */
+    .ion-na {
+      width: 38px;
+      height: 38px;
+      background: radial-gradient(circle at 35% 35%, #9B6BDE 0%, #6D4AA8 65%, #462879 100%);
+      font-size: 0.8rem;
+    }
+
+    /* Cl- esfera grande verde (radio Chang: 181 pm) */
+    .ion-cl {
+      width: 52px;
+      height: 52px;
+      background: radial-gradient(circle at 35% 35%, #48C782 0%, #2E8B57 65%, #185A35 100%);
+      font-size: 0.95rem;
+    }
+
+    .ion-meta {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .ion-meta strong {
+      font-size: 0.95rem;
+      color: var(--text);
+    }
+
+    .ion-meta span {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    /* ÁREA DEL CANVAS / SVG */
+    .viewport-container {
+      background-color: #FFFFFF;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 380px;
+    }
+
+    #svgStage {
+      width: 100%;
+      height: auto;
+      max-height: 430px;
+      display: block;
+      touch-action: none;
+    }
+
+    #canvas3D {
+      width: 100%;
+      height: 380px;
+      display: none;
+      cursor: grab;
+      touch-action: none;
+    }
+
+    #canvas3D:active {
+      cursor: grabbing;
+    }
+
+    /* INDICADOR DE ROTACIÓN 3D */
+    .hint-3d {
+      position: absolute;
+      bottom: 12px;
+      left: 12px;
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid var(--border);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      color: var(--title);
+      font-weight: 600;
+      pointer-events: none;
+      display: none;
+    }
+
+    /* ESTABILIDAD DE LA RED */
+    .stability-box {
+      background-color: #FFFFFF;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .stability-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+
+    .stability-track {
+      height: 12px;
+      background-color: #E2E8F0;
+      border-radius: 6px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .stability-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #E2E8F0, var(--accent), var(--success));
+      transition: width 0.35s ease, background-color 0.35s ease;
+    }
+
+    .stability-fill.error-state {
+      background: var(--error) !important;
+    }
+
+    .stability-details {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    /* ANIMACIÓN DE TEMBLOR (REPULSIÓN) */
+    @keyframes shakeAnimation {
+      0%, 100% { transform: translate(0, 0); }
+      20% { transform: translate(-3.5px, 2.5px); }
+      40% { transform: translate(3.5px, -2.5px); }
+      60% { transform: translate(-2.5px, -2px); }
+      80% { transform: translate(2.5px, 3px); }
+    }
+
+    .shake {
+      animation: shakeAnimation 0.18s infinite ease-in-out;
+      transform-origin: center;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .shake {
+        animation: none !important;
+        outline: 3px dashed var(--error) !important;
+      }
+      .stability-fill, button {
+        transition: none !important;
+      }
+    }
+
+    /* PANEL DERECHO DE CONTROLES */
+    .controls-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .controls-title {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--title);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .button-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    @media (max-width: 480px) {
+      .button-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* PANEL QUÉ ESTÁS VIENDO */
+    .seeing-panel {
+      background-color: var(--panel-see);
+      border: 1px solid #FCD9BD;
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .seeing-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .seeing-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #9A4307;
+    }
+
+    .pill-tags {
+      display: flex;
+      gap: 6px;
+    }
+
+    .tag-badge {
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 12px;
+      color: #FFFFFF;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .tag-macro { background-color: var(--success); }
+    .tag-submicro { background-color: var(--submicro); }
+    .tag-symbolic { background-color: var(--accent); }
+
+    .seeing-content {
+      font-size: 0.92rem;
+      color: #2D3748;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-height: 48px;
+    }
+
+    .seeing-line {
+      line-height: 1.35;
+    }
+
+    .seeing-line strong {
+      color: #1F5C8B;
+    }
+
+    /* TARJETA DE DATOS CIENTÍFICOS CHANG */
+    .data-card {
+      background-color: #FFFFFF;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+      font-size: 0.83rem;
+      color: var(--text-muted);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .data-card-title {
+      font-weight: 700;
+      color: var(--title);
+      font-size: 0.85rem;
+    }
+
+    /* MODAL DE GUÍA DE TRABAJO */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(15, 23, 42, 0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 100;
+      backdrop-filter: blur(2px);
+    }
+
+    .modal-overlay.open {
+      display: flex;
+    }
+
+    .modal-sheet {
+      background-color: #FFFFFF;
+      border-radius: var(--radius-lg);
+      width: 100%;
+      max-width: 680px;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 24px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 2px solid var(--panel);
+      padding-bottom: 12px;
+    }
+
+    .modal-title {
+      font-size: 1.35rem;
+      color: var(--title);
+      font-weight: 700;
+    }
+
+    .modal-subtitle {
+      font-size: 0.85rem;
+      color: var(--accent);
+      font-weight: 700;
+      font-variant: small-caps;
+    }
+
+    .question-block {
+      background-color: var(--panel);
+      border-radius: var(--radius-sm);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      border-left: 4px solid var(--title);
+    }
+
+    .question-tag {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--title);
+    }
+
+    .question-text {
+      font-size: 0.95rem;
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .question-input {
+      width: 100%;
+      min-height: 60px;
+      padding: 8px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      font-family: Arial, sans-serif;
+      font-size: 0.88rem;
+      resize: vertical;
+    }
+
+    .question-input:focus {
+      outline: 2px solid var(--title);
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+
+    /* ESTILOS DE IMPRESIÓN (CSS @media print) */
+    @media print {
+      body {
+        background: #FFFFFF !important;
+        color: #000000 !important;
+      }
+      .top-bar, header, .main-grid, .modal-actions, .btn-print-hide {
+        display: none !important;
+      }
+      .modal-overlay {
+        position: static !important;
+        display: block !important;
+        background: transparent !important;
+        padding: 0 !important;
+        backdrop-filter: none !important;
+      }
+      .modal-sheet {
+        box-shadow: none !important;
+        border: none !important;
+        max-width: 100% !important;
+        max-height: none !important;
+        padding: 0 !important;
+        overflow: visible !important;
+      }
+      .question-block {
+        background: #FFFFFF !important;
+        border: 1px solid #CCC !important;
+        border-left: 5px solid #1F5C8B !important;
+        page-break-inside: avoid;
+        margin-bottom: 16px;
+      }
+      .question-input {
+        border: 1px dashed #888 !important;
+        background: transparent !important;
+        min-height: 80px;
+      }
+      .print-only-header {
+        display: block !important;
+        margin-bottom: 20px;
+        border-bottom: 2px solid #1F5C8B;
+        padding-bottom: 10px;
+      }
+    }
+
+    .print-only-header {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <!-- Barra superior azul de 6px -->
+  <div class="top-bar" aria-hidden="true"></div>
+
+  <div class="app-container">
+    <!-- ENCABEZADO -->
+    <header>
+      <div class="header-top">
+        <span class="topic-tag">QUÍMICA 5.º · UNIONES QUÍMICAS · CLASE 05</span>
+        <div class="header-actions">
+          <button type="button" class="btn-secondary" id="btnGuide" aria-label="Abrir guía de trabajo para clase">
+            📝 Guía de trabajo
+          </button>
+          <button type="button" class="btn-outline-danger" id="btnResetTop" aria-label="Reiniciar simulador">
+            🔄 Reiniciar
+          </button>
+        </div>
+      </div>
+      <h1>Armá el cristal de NaCl</h1>
+      <p class="prompt-line">Arrastrá los iones a la grilla para armar la red y descubrí por qué la sal no tiene moléculas individuales.</p>
+    </header>
+
+    <!-- ZONA PRINCIPAL DE DOS COLUMNAS -->
+    <main class="main-grid">
+      <!-- COLUMNA IZQUIERDA: ZONA DE SIMULACIÓN -->
+      <section class="sim-panel" aria-label="Zona de simulación del cristal">
+        <div class="sim-panel-header">
+          <h2 class="sim-panel-title">Espacio de interacción</h2>
+          <div class="view-toggle" role="tablist" aria-label="Modo de visualización">
+            <button type="button" id="tab2D" class="active" role="tab" aria-selected="true" aria-controls="svgStage">Plano 2D</button>
+            <button type="button" id="tab3D" role="tab" aria-selected="false" aria-controls="canvas3D">Cubo 3D (3×3×3)</button>
+          </div>
+        </div>
+
+        <!-- BANDEJA DE IONES (VISIBLE EN 2D) -->
+        <div class="ion-tray" id="ionTray" aria-label="Bandeja de iones disponibles">
+          <span class="tray-label">Iones:</span>
+          
+          <div class="ion-source" id="sourceNa" tabindex="0" role="button" aria-label="Ion Sodio positivo (Na+), radio 102 picómetros. Hacé clic para seleccionar o arrastralo." data-type="Na">
+            <div class="ion-badge ion-na" aria-hidden="true">Na⁺</div>
+            <div class="ion-meta">
+              <strong>Na⁺ (Catión)</strong>
+              <span>Radio: 102 pm</span>
+            </div>
+          </div>
+
+          <div class="ion-source" id="sourceCl" tabindex="0" role="button" aria-label="Ion Cloruro negativo (Cl-), radio 181 picómetros. Hacé clic para seleccionar o arrastralo." data-type="Cl">
+            <div class="ion-badge ion-cl" aria-hidden="true">Cl⁻</div>
+            <div class="ion-meta">
+              <strong>Cl⁻ (Anión)</strong>
+              <span>Radio: 181 pm</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- VIEWPORT DE SIMULACIÓN (SVG 2D O CANVAS 3D) -->
+        <div class="viewport-container" id="viewportBox">
+          <!-- SVG PARA GRILLA 2D -->
+          <svg id="svgStage" viewBox="0 0 540 440" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Grilla bidimensional de iones de cloruro de sodio">
+            <defs>
+              <!-- Sombreado esférico para Na+ (violeta) -->
+              <radialGradient id="gradNa" cx="35%" cy="32%" r="68%">
+                <stop offset="0%" stop-color="#D6B8FF" />
+                <stop offset="45%" stop-color="#8A4FFF" />
+                <stop offset="85%" stop-color="#552F94" />
+                <stop offset="100%" stop-color="#361765" />
+              </radialGradient>
+              
+              <!-- Sombreado esférico para Cl- (verde) -->
+              <radialGradient id="gradCl" cx="35%" cy="32%" r="68%">
+                <stop offset="0%" stop-color="#76EBA5" />
+                <stop offset="40%" stop-color="#2E8B57" />
+                <stop offset="85%" stop-color="#1B613A" />
+                <stop offset="100%" stop-color="#0E3D22" />
+              </radialGradient>
+
+              <!-- Filtro de sombra suave -->
+              <filter id="sphereShadow" x="-20%" y="-20%" width="140%" height="140%">
+                <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#0F172A" flood-opacity="0.25"/>
+              </filter>
+            </defs>
+
+            <!-- Capa de líneas de unión (fuerzas de Coulomb) -->
+            <g id="layerForces"></g>
+
+            <!-- Capa de celdas / slots guía -->
+            <g id="layerSlots"></g>
+
+            <!-- Capa de iones colocados -->
+            <g id="layerIons"></g>
+
+            <!-- Capa de efectos especiales (buscar molécula, fractura) -->
+            <g id="layerOverlays"></g>
+          </svg>
+
+          <!-- CANVAS PARA CUBO 3D (3×3×3) -->
+          <canvas id="canvas3D" width="540" height="400" aria-label="Cubo cristalino tridimensional 3 por 3 por 3 de NaCl"></canvas>
+          <div class="hint-3d" id="hint3D">Arrastrá con el ratón o dedo para girar el cristal en 3D</div>
+        </div>
+
+        <!-- BARRA CUALITATIVA DE ESTABILIDAD DE LA RED -->
+        <div class="stability-box" id="stabilityBox">
+          <div class="stability-meta">
+            <span>Estabilidad electrostática de la red:</span>
+            <span id="stabilityLabel" style="color: var(--text-muted);">Sin iones</span>
+          </div>
+          <div class="stability-track" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" id="stabilityBar">
+            <div class="stability-fill" id="stabilityFill"></div>
+          </div>
+          <div class="stability-details">
+            <span id="attractionCount">Atracciones (+ con −): 0</span>
+            <span id="repulsionCount">Repulsiones (signo igual): 0</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- COLUMNA DERECHA: CONTROLES Y PEDAGOGÍA -->
+      <section class="controls-panel" aria-label="Panel de acciones e interpretaciones">
+        <!-- ACCIONES PRINCIPALES -->
+        <div class="controls-group">
+          <h2 class="controls-title">Acciones sobre el cristal</h2>
+          <div class="button-grid">
+            <button type="button" class="btn-primary" id="btnAutoFill" aria-label="Llenar automáticamente la red de iones alternados">
+              ✨ Llenar automático
+            </button>
+            <button type="button" class="btn-secondary" id="btnToggle3D" aria-label="Alternar vista 3D interactiva del cristal">
+              🧊 Vista 3D simple
+            </button>
+            <button type="button" class="btn-secondary" id="btnCountNeighbors" aria-label="Resaltar y contar los 6 vecinos inmediatos">
+              🔍 Contá vecinos (6)
+            </button>
+            <button type="button" class="btn-secondary" id="btnFindMolecule" aria-label="Buscar la supuesta molécula de NaCl">
+              🔬 Buscar la molécula
+            </button>
+          </div>
+          
+          <button type="button" class="btn-accent" id="btnDisplaceRow" aria-label="Desplazar una fila de iones para observar el golpe y fractura">
+            ⚡ Desplazar una fila (Fractura)
+          </button>
+        </div>
+
+        <!-- PANEL QUÉ ESTÁS VIENDO (FONDO #FFF4EA) -->
+        <div class="seeing-panel" id="seeingPanel" aria-live="polite">
+          <div class="seeing-header">
+            <span class="seeing-title">¿Qué estás viendo?</span>
+            <div class="pill-tags">
+              <span class="tag-badge tag-macro" title="Nivel macroscópico">Macro</span>
+              <span class="tag-badge tag-submicro" title="Nivel submicroscópico">Submicro</span>
+              <span class="tag-badge tag-symbolic" title="Nivel simbólico">Simbólico</span>
+            </div>
+          </div>
+          <div class="seeing-content" id="seeingContent">
+            <p class="seeing-line" id="seeingMacro"><strong>Macro:</strong> Un grano de sal de mesa es un cristal cúbico visible, duro y quebradizo.</p>
+            <p class="seeing-line" id="seeingSubmicro"><strong>Submicro:</strong> La grilla está vacía. Arrastrá iones Na⁺ y Cl⁻ para armar la red ordenada.</p>
+            <p class="seeing-line" id="seeingSymbolic"><strong>Simbólico:</strong> La fórmula "NaCl" expresa la proporción mínima 1:1, no moléculas aisladas.</p>
+          </div>
+        </div>
+
+        <!-- DATOS DEL TEXTO (CHANG 12.ª ED.) -->
+        <div class="data-card">
+          <span class="data-card-title">Datos experimentales (Chang, 12.ª ed.):</span>
+          <div>• Radio catión Na⁺: <strong>102 pm</strong> (Tabla 8.3)</div>
+          <div>• Radio anión Cl⁻: <strong>181 pm</strong> (Tabla 8.3)</div>
+          <div>• Relación de radios: r₊ / r₋ = <strong>0,563</strong> (determina coordinación octaédrica: 6 vecinos)</div>
+          <div>• Electronegatividades: Na = 0,9 · Cl = 3,0 (ΔEN = 2,1; ref: ≈ 2,0 como regla práctica, con excepciones)</div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- MODAL / HOJA IMPRIMIBLE DE GUÍA DE TRABAJO -->
+  <div class="modal-overlay" id="guideModal" role="dialog" aria-modal="true" aria-labelledby="guideTitle">
+    <div class="modal-sheet">
+      <div class="print-only-header">
+        <h2 style="color: #1F5C8B; font-size: 1.5rem;">QUÍMICA 5.º AÑO · GUÍA DE TRABAJO DE LABORATORIO VIRTUAL</h2>
+        <p><strong>Tema:</strong> Redes cristalinas y enlace iónico (Cloruro de Sodio, NaCl) · <strong>Nombre del alumno:</strong> ____________________________________ <strong>Fecha:</strong> ___/___/______</p>
+      </div>
+
+      <div class="modal-header">
+        <div>
+          <span class="modal-subtitle">Clase 05 · Uniones Químicas</span>
+          <h2 class="modal-title" id="guideTitle">Guía de trabajo e indagación</h2>
+        </div>
+        <button type="button" class="btn-outline-danger btn-print-hide" id="btnCloseGuide" aria-label="Cerrar guía de trabajo">
+          ✕ Cerrar
+        </button>
+      </div>
+
+      <p class="btn-print-hide" style="font-size: 0.9rem; color: var(--text-muted);">
+        Respondé las preguntas a medida que explorás el simulador. Podés escribir acá o imprimir la hoja lista para el aula.
+      </p>
+
+      <!-- PREGUNTA 1: PREDICCIÓN -->
+      <div class="question-block">
+        <span class="question-tag">1. Predicción (Antes de tocar el simulador)</span>
+        <label for="q1" class="question-text">
+          En la sal común que usás en tu casa, ¿con cuántos iones Cl⁻ creés que está unido cada ion Na⁺? ¿Por qué pensás eso?
+        </label>
+        <textarea id="q1" class="question-input" placeholder="Escribí acá tu hipótesis inicial..."></textarea>
+      </div>
+
+      <!-- PREGUNTA 2: OBSERVACIÓN 1 -->
+      <div class="question-block">
+        <span class="question-tag">2. Observación (Atracción y repulsión)</span>
+        <label for="q2" class="question-text">
+          Ubicá dos iones del mismo signo contiguos en la grilla y luego dos de signo opuesto. ¿Qué les ocurre a las líneas de unión y por qué tiemblan los iones del mismo signo?
+        </label>
+        <textarea id="q2" class="question-input" placeholder="Describí qué observás en las líneas verdes y rojas..."></textarea>
+      </div>
+
+      <!-- PREGUNTA 3: OBSERVACIÓN 2 -->
+      <div class="question-block">
+        <span class="question-tag">3. Observación (Búsqueda de la molécula)</span>
+        <label for="q3" class="question-text">
+          Hacé clic en "Buscar la molécula". Mirá el ion Na⁺ seleccionado: ¿pertenece exclusivamente al Cl⁻ que tiene al lado? ¿A qué distancia están los demás Cl⁻ vecinos?
+        </label>
+        <textarea id="q3" class="question-input" placeholder="Explicá lo que muestra el resaltado..."></textarea>
+      </div>
+
+      <!-- PREGUNTA 4: EXPLICACIÓN -->
+      <div class="question-block">
+        <span class="question-tag">4. Explicación conceptual</span>
+        <label for="q4" class="question-text">
+          Si en el cristal no existen parejas aisladas de Na-Cl, ¿qué significa realmente la fórmula química "NaCl" que escribimos en la carpeta?
+        </label>
+        <textarea id="q4" class="question-input" placeholder="Justificá por qué es una unidad fórmula y no una molécula..."></textarea>
+      </div>
+
+      <!-- PREGUNTA 5: TRANSFERENCIA -->
+      <div class="question-block">
+        <span class="question-tag">5. Transferencia (Propiedades macroscópicas)</span>
+        <label for="q5" class="question-text">
+          Probá el botón "Desplazar una fila". ¿Por qué la sal se quiebra limpiamente en láminas planas al golpearla en vez de deformarse como un clavo de hierro?
+        </label>
+        <textarea id="q5" class="question-input" placeholder="Relacioná el golpe mecánico con la repulsión de cargas..."></textarea>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-accent" id="btnPrintGuide">
+          🖨️ Imprimir guía para clase
+        </button>
+        <button type="button" class="btn-secondary" id="btnDoneGuide">
+          Volver al simulador
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCRIPT VANILLA INTERACTIVO COMPLETO -->
+  <script>
+    (function() {
+      'use strict';
+
+      // --- CONFIGURACIÓN DE LA GRILLA 2D ---
+      const ROWS = 4;
+      const COLS = 4;
+      // Posiciones de centro en SVG (540x440 viewBox)
+      const GRID_OFFSET_X = 115;
+      const GRID_OFFSET_Y = 65;
+      const CELL_SIZE = 95;
+
+      // Estado de la grilla 4x4: matriz con null, 'Na' o 'Cl'
+      let grid = Array(ROWS).fill(null).map(() => Array(COLS).fill(null));
+
+      // Modos interactivos
+      let selectedTool = null; // 'Na' | 'Cl' | null
+      let isDisplaced = false;  // si la fila/capa fue desplazada (golpe/fractura)
+      let isFindingMolecule = false;
+      let isCountingNeighbors = false;
+      let viewMode = '2D'; // '2D' | '3D'
+
+      // Radio visual de iones según Chang (Na+: 102 pm, Cl-: 181 pm)
+      // Escala visual adecuada a la grilla
+      const RADIUS_NA = 20; // 102 pm
+      const RADIUS_CL = 34; // 181 pm
+
+      // Elementos del DOM
+      const svgStage = document.getElementById('svgStage');
+      const layerForces = document.getElementById('layerForces');
+      const layerSlots = document.getElementById('layerSlots');
+      const layerIons = document.getElementById('layerIons');
+      const layerOverlays = document.getElementById('layerOverlays');
+      const canvas3D = document.getElementById('canvas3D');
+      const hint3D = document.getElementById('hint3D');
+      const ionTray = document.getElementById('ionTray');
+      const sourceNa = document.getElementById('sourceNa');
+      const sourceCl = document.getElementById('sourceCl');
+
+      const stabilityBar = document.getElementById('stabilityBar');
+      const stabilityFill = document.getElementById('stabilityFill');
+      const stabilityLabel = document.getElementById('stabilityLabel');
+      const attractionCountEl = document.getElementById('attractionCount');
+      const repulsionCountEl = document.getElementById('repulsionCount');
+
+      const seeingMacro = document.getElementById('seeingMacro');
+      const seeingSubmicro = document.getElementById('seeingSubmicro');
+      const seeingSymbolic = document.getElementById('seeingSymbolic');
+
+      const btnAutoFill = document.getElementById('btnAutoFill');
+      const btnToggle3D = document.getElementById('btnToggle3D');
+      const btnCountNeighbors = document.getElementById('btnCountNeighbors');
+      const btnFindMolecule = document.getElementById('btnFindMolecule');
+      const btnDisplaceRow = document.getElementById('btnDisplaceRow');
+      const btnResetTop = document.getElementById('btnResetTop');
+      const tab2D = document.getElementById('tab2D');
+      const tab3D = document.getElementById('tab3D');
+
+      const guideModal = document.getElementById('guideModal');
+      const btnGuide = document.getElementById('btnGuide');
+      const btnCloseGuide = document.getElementById('btnCloseGuide');
+      const btnDoneGuide = document.getElementById('btnDoneGuide');
+      const btnPrintGuide = document.getElementById('btnPrintGuide');
+
+      // --- INICIALIZACIÓN DE LA GRILLA SVG ---
+      function initGridSlots() {
+        layerSlots.innerHTML = '';
+        for (let r = 0; r < ROWS; r++) {
+          for (let c = 0; c < COLS; c++) {
+            const cx = GRID_OFFSET_X + c * CELL_SIZE;
+            const cy = GRID_OFFSET_Y + r * CELL_SIZE;
+
+            // Círculo de slot guía
+            const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            circle.setAttribute('cx', cx);
+            circle.setAttribute('cy', cy);
+            circle.setAttribute('r', '26');
+            circle.setAttribute('fill', '#F8FAFC');
+            circle.setAttribute('stroke', '#CBD5E1');
+            circle.setAttribute('stroke-width', '1.5');
+            circle.setAttribute('stroke-dasharray', '4 3');
+            circle.setAttribute('class', 'grid-slot-target');
+            circle.setAttribute('tabindex', '0');
+            circle.setAttribute('role', 'button');
+            circle.setAttribute('aria-label', `Casillero fila ${r + 1}, columna ${c + 1}`);
+            circle.dataset.row = r;
+            circle.dataset.col = c;
+
+            // Manejo de clic y teclado en casillero
+            circle.addEventListener('click', () => handleSlotClick(r, c));
+            circle.addEventListener('keydown', (e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                handleSlotClick(r, c);
+              }
+            });
+
+            layerSlots.appendChild(circle);
+          }
+        }
+      }
+
+      // --- ACCIÓN AL CLICKEAR CASILLERO ---
+      function handleSlotClick(r, c) {
+        if (isDisplaced) {
+          // Si está desplazado, no permitimos editar hasta restaurar
+          updateSeeing(
+            "El cristal fracturado muestra las caras de clivaje planas.",
+            "Restaurá la fila primero para seguir colocando iones en la red.",
+            "En el plano de corte, las cargas iguales enfrentadas rompieron la unión."
+          );
+          return;
+        }
+
+        // Si ya hay un ion en esa posición y no tenemos herramienta seleccionada, lo retiramos
+        if (grid[r][c] && !selectedTool) {
+          grid[r][c] = null;
+        } else if (selectedTool) {
+          grid[r][c] = selectedTool;
+        } else {
+          // Si no tiene herramienta pero hace clic, alternamos Na -> Cl -> null
+          if (!grid[r][c]) grid[r][c] = 'Na';
+          else if (grid[r][c] === 'Na') grid[r][c] = 'Cl';
+          else grid[r][c] = null;
+        }
+
+        // Apagar modos secundarios de inspección
+        isFindingMolecule = false;
+        isCountingNeighbors = false;
+        btnFindMolecule.classList.remove('btn-accent');
+        btnCountNeighbors.classList.remove('btn-accent');
+
+        renderGrid();
+      }
+
+      // --- RENDERIZADO COMPLETO DE LA GRILLA 2D ---
+      function renderGrid() {
+        layerForces.innerHTML = '';
+        layerIons.innerHTML = '';
+        layerOverlays.innerHTML = '';
+
+        let attractions = 0;
+        let repulsions = 0;
+        let totalPlaced = 0;
+        const repellingPositions = new Set();
+
+        // 1. Detectar fuerzas entre vecinos inmediatos (horizontal y vertical)
+        // Desplazamiento visual si 'isDisplaced' está activo (filas 0 y 1 se corren a la derecha)
+        const getCoord = (r, c) => {
+          let cx = GRID_OFFSET_X + c * CELL_SIZE;
+          let cy = GRID_OFFSET_Y + r * CELL_SIZE;
+          if (isDisplaced && (r === 0 || r === 1)) {
+            cx += CELL_SIZE * 0.95; // Desplazar casi una celda completa
+            cy -= 12; // Separación vertical de fractura
+          } else if (isDisplaced && (r === 2 || r === 3)) {
+            cy += 12; // Separación vertical hacia abajo
+          }
+          return { cx, cy };
+        };
+
+        // Comprobar conexiones
+        for (let r = 0; r < ROWS; r++) {
+          for (let c = 0; c < COLS; c++) {
+            const ion = grid[r][c];
+            if (!ion) continue;
+            totalPlaced++;
+
+            const pos1 = getCoord(r, c);
+
+            // Vecino horizontal derecho
+            if (c + 1 < COLS && grid[r][c + 1]) {
+              const neighbor = grid[r][c + 1];
+              const pos2 = getCoord(r, c + 1);
+              const isOpposite = ion !== neighbor;
+
+              if (isOpposite) {
+                attractions++;
+                drawForceLine(pos1.cx, pos1.cy, pos2.cx, pos2.cy, '#2E8B57', 3, false);
+              } else {
+                repulsions++;
+                repellingPositions.add(`${r},${c}`);
+                repellingPositions.add(`${r},${c + 1}`);
+                drawForceLine(pos1.cx, pos1.cy, pos2.cx, pos2.cy, '#C0392B', 3.5, true);
+              }
+            }
+
+            // Vecino vertical inferior
+            if (r + 1 < ROWS && grid[r + 1][c]) {
+              const neighbor = grid[r + 1][c];
+              const pos2 = getCoord(r + 1, c);
+              
+              // Si la fila 1 y 2 están desplazadas, la fractura rompe el contacto
+              if (isDisplaced && r === 1) {
+                // Enfrentamiento de fractura
+                const isOpposite = ion !== neighbor;
+                // En el desplazamiento, enfrentamos cargas iguales!
+                repulsions += 2;
+                repellingPositions.add(`${r},${c}`);
+                repellingPositions.add(`${r + 1},${c}`);
+                drawForceLine(pos1.cx, pos1.cy, pos2.cx, pos2.cy, '#C0392B', 4, true);
+              } else {
+                const isOpposite = ion !== neighbor;
+                if (isOpposite) {
+                  attractions++;
+                  drawForceLine(pos1.cx, pos1.cy, pos2.cx, pos2.cy, '#2E8B57', 3, false);
+                } else {
+                  repulsions++;
+                  repellingPositions.add(`${r},${c}`);
+                  repellingPositions.add(`${r + 1},${c}`);
+                  drawForceLine(pos1.cx, pos1.cy, pos2.cx, pos2.cy, '#C0392B', 3.5, true);
+                }
+              }
+            }
+          }
+        }
+
+        // 2. Dibujar iones
+        for (let r = 0; r < ROWS; r++) {
+          for (let c = 0; c < COLS; c++) {
+            const ion = grid[r][c];
+            if (!ion) continue;
+
+            const { cx, cy } = getCoord(r, c);
+            const isRepelling = repellingPositions.has(`${r},${c}`);
+
+            const gIon = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            gIon.setAttribute('transform', `translate(${cx}, ${cy})`);
+            gIon.setAttribute('cursor', 'pointer');
+            gIon.setAttribute('tabindex', '0');
+            gIon.setAttribute('role', 'button');
+            gIon.setAttribute('aria-label', `Ion ${ion === 'Na' ? 'Sodio Na+' : 'Cloruro Cl-'} en fila ${r+1}, columna ${c+1}. Hacé clic para retirarlo.`);
+
+            if (isRepelling) {
+              gIon.setAttribute('class', 'shake');
+            }
+
+            gIon.addEventListener('click', (e) => {
+              e.stopPropagation();
+              handleSlotClick(r, c);
+            });
+
+            // Esfera con degradado según tipo
+            const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            circle.setAttribute('cx', 0);
+            circle.setAttribute('cy', 0);
+            circle.setAttribute('filter', 'url(#sphereShadow)');
+
+            const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            text.setAttribute('x', 0);
+            text.setAttribute('y', 0);
+            text.setAttribute('text-anchor', 'middle');
+            text.setAttribute('dominant-baseline', 'central');
+            text.setAttribute('fill', '#FFFFFF');
+            text.setAttribute('font-weight', 'bold');
+            text.setAttribute('pointer-events', 'none');
+
+            if (ion === 'Na') {
+              circle.setAttribute('r', RADIUS_NA);
+              circle.setAttribute('fill', 'url(#gradNa)');
+              text.setAttribute('font-size', '13');
+              text.textContent = 'Na⁺';
+            } else {
+              circle.setAttribute('r', RADIUS_CL);
+              circle.setAttribute('fill', 'url(#gradCl)');
+              text.setAttribute('font-size', '15');
+              text.textContent = 'Cl⁻';
+            }
+
+            gIon.appendChild(circle);
+            gIon.appendChild(text);
+            layerIons.appendChild(gIon);
+          }
+        }
+
+        // 3. Efectos especiales activos
+        if (isFindingMolecule) {
+          renderMoleculeHighlight();
+        } else if (isCountingNeighbors) {
+          renderNeighborsHighlight();
+        } else if (isDisplaced) {
+          renderFracturePlane();
+        }
+
+        // 4. Actualizar barra de estabilidad
+        updateStability(attractions, repulsions, totalPlaced);
+      }
+
+      // --- DIBUJO DE LÍNEAS DE FUERZA ---
+      function drawForceLine(x1, y1, x2, y2, color, width, isDashed) {
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('x1', x1);
+        line.setAttribute('y1', y1);
+        line.setAttribute('x2', x2);
+        line.setAttribute('y2', y2);
+        line.setAttribute('stroke', color);
+        line.setAttribute('stroke-width', width);
+        line.setAttribute('stroke-linecap', 'round');
+        if (isDashed) {
+          line.setAttribute('stroke-dasharray', '5 4');
+        }
+        layerForces.appendChild(line);
+      }
+
+      // --- EFECTO: BUSCAR LA MOLÉCULA ---
+      function renderMoleculeHighlight() {
+        // Encerramos el par (1,1) Na+ y (1,2) Cl-
+        const cx1 = GRID_OFFSET_X + 1 * CELL_SIZE;
+        const cy1 = GRID_OFFSET_Y + 1 * CELL_SIZE;
+        const cx2 = GRID_OFFSET_X + 2 * CELL_SIZE;
+        const cy2 = GRID_OFFSET_Y + 1 * CELL_SIZE;
+
+        // Caja de la supuesta "molécula"
+        const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        rect.setAttribute('x', cx1 - 32);
+        rect.setAttribute('y', cy1 - 44);
+        rect.setAttribute('width', (cx2 - cx1) + 68);
+        rect.setAttribute('height', 88);
+        rect.setAttribute('rx', 24);
+        rect.setAttribute('fill', 'rgba(224, 122, 31, 0.08)');
+        rect.setAttribute('stroke', '#E07A1F');
+        rect.setAttribute('stroke-width', '2.5');
+        rect.setAttribute('stroke-dasharray', '6 4');
+        layerOverlays.appendChild(rect);
+
+        // Cartel explicativo
+        const textBg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        textBg.setAttribute('x', cx1 - 40);
+        textBg.setAttribute('y', cy1 - 74);
+        textBg.setAttribute('width', 220);
+        textBg.setAttribute('height', 24);
+        textBg.setAttribute('rx', 6);
+        textBg.setAttribute('fill', '#1F5C8B');
+        layerOverlays.appendChild(textBg);
+
+        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        text.setAttribute('x', cx1 + 70);
+        text.setAttribute('y', cy1 - 58);
+        text.setAttribute('text-anchor', 'middle');
+        text.setAttribute('fill', '#FFFFFF');
+        text.setAttribute('font-size', '11');
+        text.setAttribute('font-weight', 'bold');
+        text.textContent = '¿Par exclusivo? ¡No, hay 5 Cl⁻ más!';
+        layerOverlays.appendChild(text);
+
+        // Flechas a otros vecinos que también atraen al mismo Na+
+        const neighbors = [
+          { c: 0, r: 1 }, // izquierda
+          { c: 1, r: 0 }, // arriba
+          { c: 1, r: 2 }  // abajo
+        ];
+
+        neighbors.forEach(n => {
+          const nx = GRID_OFFSET_X + n.c * CELL_SIZE;
+          const ny = GRID_OFFSET_Y + n.r * CELL_SIZE;
+          const arrow = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+          arrow.setAttribute('x1', cx1);
+          arrow.setAttribute('y1', cy1);
+          arrow.setAttribute('x2', nx);
+          arrow.setAttribute('y2', ny);
+          arrow.setAttribute('stroke', '#E07A1F');
+          arrow.setAttribute('stroke-width', '2');
+          arrow.setAttribute('stroke-dasharray', '3 3');
+          layerOverlays.appendChild(arrow);
+        });
+      }
+
+      // --- EFECTO: CONTAR VECINOS ---
+      function renderNeighborsHighlight() {
+        // Centramos en el ion Na+ en (1, 1)
+        const cx = GRID_OFFSET_X + 1 * CELL_SIZE;
+        const cy = GRID_OFFSET_Y + 1 * CELL_SIZE;
+
+        // Halo dorado alrededor de Na+
+        const halo = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        halo.setAttribute('cx', cx);
+        halo.setAttribute('cy', cy);
+        halo.setAttribute('r', RADIUS_NA + 8);
+        halo.setAttribute('fill', 'none');
+        halo.setAttribute('stroke', '#E07A1F');
+        halo.setAttribute('stroke-width', '3');
+        layerOverlays.appendChild(halo);
+
+        // Etiquetas para los 4 vecinos coplanares
+        const planar = [
+          { r: 0, c: 1, label: '1' },
+          { r: 1, c: 2, label: '2' },
+          { r: 2, c: 1, label: '3' },
+          { r: 1, c: 0, label: '4' }
+        ];
+
+        planar.forEach(p => {
+          const px = GRID_OFFSET_X + p.c * CELL_SIZE;
+          const py = GRID_OFFSET_Y + p.r * CELL_SIZE;
+          
+          const badge = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+          badge.setAttribute('cx', px);
+          badge.setAttribute('cy', py - RADIUS_CL - 4);
+          badge.setAttribute('r', 10);
+          badge.setAttribute('fill', '#E07A1F');
+          layerOverlays.appendChild(badge);
+
+          const num = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+          num.setAttribute('x', px);
+          num.setAttribute('y', py - RADIUS_CL);
+          num.setAttribute('text-anchor', 'middle');
+          num.setAttribute('dominant-baseline', 'central');
+          num.setAttribute('fill', '#FFFFFF');
+          num.setAttribute('font-size', '11');
+          num.setAttribute('font-weight', 'bold');
+          num.textContent = p.label;
+          layerOverlays.appendChild(num);
+        });
+
+        // Nota de los otros 2 vecinos en 3D
+        const badge3d = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        badge3d.setAttribute('x', cx - 95);
+        badge3d.setAttribute('y', cy + 32);
+        badge3d.setAttribute('width', 190);
+        badge3d.setAttribute('height', 24);
+        badge3d.setAttribute('rx', 6);
+        badge3d.setAttribute('fill', '#6D4AA8');
+        layerOverlays.appendChild(badge3d);
+
+        const text3d = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        text3d.setAttribute('x', cx);
+        text3d.setAttribute('y', cy + 48);
+        text3d.setAttribute('text-anchor', 'middle');
+        text3d.setAttribute('fill', '#FFFFFF');
+        text3d.setAttribute('font-size', '10.5');
+        text3d.setAttribute('font-weight', 'bold');
+        text3d.textContent = '+ 2 vecinos en 3D (arriba y abajo) = 6';
+        layerOverlays.appendChild(text3d);
+      }
+
+      // --- EFECTO: FRACTURA Y PLANO DE CLIVAJE ---
+      function renderFracturePlane() {
+        const yCrack = GRID_OFFSET_Y + 1.5 * CELL_SIZE;
+
+        const crackLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        crackLine.setAttribute('x1', 20);
+        crackLine.setAttribute('y1', yCrack);
+        crackLine.setAttribute('x2', 520);
+        crackLine.setAttribute('y2', yCrack);
+        crackLine.setAttribute('stroke', '#C0392B');
+        crackLine.setAttribute('stroke-width', '2.5');
+        crackLine.setAttribute('stroke-dasharray', '8 4');
+        layerOverlays.appendChild(crackLine);
+
+        // Flechas de repulsión
+        const labelRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        labelRect.setAttribute('x', 140);
+        labelRect.setAttribute('y', yCrack - 14);
+        labelRect.setAttribute('width', 260);
+        labelRect.setAttribute('height', 28);
+        labelRect.setAttribute('rx', 6);
+        labelRect.setAttribute('fill', '#C0392B');
+        layerOverlays.appendChild(labelRect);
+
+        const labelText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        labelText.setAttribute('x', 270);
+        labelText.setAttribute('y', yCrack + 4);
+        labelText.setAttribute('text-anchor', 'middle');
+        labelText.setAttribute('fill', '#FFFFFF');
+        labelText.setAttribute('font-size', '12');
+        labelText.setAttribute('font-weight', 'bold');
+        labelText.textContent = 'PLANO DE CLIVAJE (REPULSIÓN)';
+        layerOverlays.appendChild(labelText);
+      }
+
+      // --- CÁLCULO DE ESTABILIDAD ELECTROSTÁTICA ---
+      function updateStability(attractions, repulsions, totalPlaced) {
+        attractionCountEl.textContent = `Atracciones (+ con −): ${attractions}`;
+        repulsionCountEl.textContent = `Repulsiones (signo igual): ${repulsions}`;
+
+        if (totalPlaced === 0) {
+          stabilityFill.style.width = '0%';
+          stabilityFill.className = 'stability-fill';
+          stabilityLabel.textContent = 'Sin iones';
+          stabilityLabel.style.color = 'var(--text-muted)';
+          return;
+        }
+
+        if (repulsions > 0) {
+          // Repulsión: estado inestable
+          stabilityFill.style.width = '100%';
+          stabilityFill.className = 'stability-fill error-state';
+          stabilityLabel.textContent = '¡Inestable! Repulsión electrostática';
+          stabilityLabel.style.color = 'var(--error)';
+          updateSeeing(
+            "La repulsión interna desestabiliza cualquier intento de formar el cristal.",
+            "Cargas del mismo signo juntas se repelen fuertemente según la Ley de Coulomb.",
+            "La red solo es estable si cada ion está rodeado exclusivamente por iones opuestos."
+          );
+          return;
+        }
+
+        // Sin repulsiones: evaluamos estabilidad creciente
+        // Máximo posible de atracciones en 4x4 perfecto = 24
+        const maxAttractions = 24;
+        const percent = Math.min(100, Math.round((attractions / maxAttractions) * 100));
+        stabilityFill.className = 'stability-fill';
+        stabilityFill.style.width = `${percent}%`;
+
+        if (percent === 100) {
+          stabilityLabel.textContent = 'Máxima estabilidad (Red neutra)';
+          stabilityLabel.style.color = 'var(--success)';
+          updateSeeing(
+            "El cristal se ordena espontáneamente en cubos con caras lisas y planas.",
+            "Cada ion maximiza atracciones con iones opuestos y minimiza repulsiones.",
+            "NaCl expresa la neutralidad eléctrica de la red infinita en proporción 1:1."
+          );
+        } else if (percent > 40) {
+          stabilityLabel.textContent = 'Parcialmente estable';
+          stabilityLabel.style.color = 'var(--accent)';
+          updateSeeing(
+            "Aparecen los primeros fragmentos de red cristalina con atracción mutua.",
+            "Los iones adyacentes alternan cargas (+) y (−) reduciendo la energía potencial.",
+            "Faltan completar posiciones para alcanzar la neutralidad y simetría completa."
+          );
+        } else {
+          stabilityLabel.textContent = 'Red incipiente';
+          stabilityLabel.style.color = 'var(--title)';
+          updateSeeing(
+            "Iones individuales en solución o en proceso de precipitación.",
+            "Seguí agregando iones respetando la alternancia para formar la red ordenada.",
+            "Un par aislado no forma sal sólida: necesita extenderse en tres dimensiones."
+          );
+        }
+      }
+
+      // --- ACTUALIZACIÓN DEL PANEL "¿QUÉ ESTÁS VIENDO?" ---
+      function updateSeeing(macroText, submicroText, symbolicText) {
+        seeingMacro.innerHTML = `<strong>Macro:</strong> ${macroText}`;
+        seeingSubmicro.innerHTML = `<strong>Submicro:</strong> ${submicroText}`;
+        seeingSymbolic.innerHTML = `<strong>Simbólico:</strong> ${symbolicText}`;
+      }
+
+      // --- LLENADO AUTOMÁTICO PERFECTO (RED ALTERNADA) ---
+      function autoFillGrid() {
+        isDisplaced = false;
+        isFindingMolecule = false;
+        isCountingNeighbors = false;
+        btnDisplaceRow.textContent = '⚡ Desplazar una fila (Fractura)';
+        btnDisplaceRow.classList.remove('btn-outline-danger');
+        btnDisplaceRow.classList.add('btn-accent');
+
+        // Alternancia perfecta: fila par empieza con Na, fila impar con Cl
+        for (let r = 0; r < ROWS; r++) {
+          for (let c = 0; c < COLS; c++) {
+            grid[r][c] = ((r + c) % 2 === 0) ? 'Na' : 'Cl';
+          }
+        }
+        renderGrid();
+      }
+
+      // --- DESPLAZAR UNA FILA (MECANISMO DE FRACTURA) ---
+      function toggleDisplaceRow() {
+        // Si la grilla está vacía o casi vacía, la llenamos primero
+        let count = 0;
+        grid.forEach(row => row.forEach(val => { if (val) count++; }));
+        if (count < 8) {
+          autoFillGrid();
+        }
+
+        isDisplaced = !isDisplaced;
+        isFindingMolecule = false;
+        isCountingNeighbors = false;
+
+        if (isDisplaced) {
+          btnDisplaceRow.textContent = '↩ Restaurar fila (Unir cristal)';
+          btnDisplaceRow.classList.remove('btn-accent');
+          btnDisplaceRow.classList.add('btn-outline-danger');
+          updateSeeing(
+            "Al recibir un golpe, el grano de sal se quiebra formando fragmentos cúbicos limpios.",
+            "El deslizamiento forzó cargas iguales frente a frente (+ con +, − con −), rompiendo la red.",
+            "Los sólidos iónicos son duros pero frágiles: no admiten deformación plástica."
+          );
+        } else {
+          btnDisplaceRow.textContent = '⚡ Desplazar una fila (Fractura)';
+          btnDisplaceRow.classList.remove('btn-outline-danger');
+          btnDisplaceRow.classList.add('btn-accent');
+          updateSeeing(
+            "La red vuelve a encajar con atracción electrostática continua en todas direcciones.",
+            "Las cargas opuestas vuelven a alinearse minimizando la energía del cristal.",
+            "Fórmula empírica NaCl: el equilibrio de cargas garantiza la estabilidad."
+          );
+        }
+
+        renderGrid();
+      }
+
+      // --- BUSCAR LA MOLÉCULA ---
+      function toggleFindMolecule() {
+        let count = 0;
+        grid.forEach(row => row.forEach(val => { if (val) count++; }));
+        if (count < 8) autoFillGrid();
+
+        isFindingMolecule = !isFindingMolecule;
+        isCountingNeighbors = false;
+        isDisplaced = false;
+        btnDisplaceRow.textContent = '⚡ Desplazar una fila (Fractura)';
+
+        if (isFindingMolecule) {
+          btnFindMolecule.classList.add('btn-accent');
+          btnCountNeighbors.classList.remove('btn-accent');
+          updateSeeing(
+            "No existen 'moléculas de sal' dentro del salero ni disueltas como pares cerrados.",
+            "Ese Na⁺ tiene 6 aniones Cl⁻ a exactamente la misma distancia (282 pm) atrayéndolo.",
+            "NaCl es solo la unidad fórmula: indica una relación estequiométrica 1:1 en la red."
+          );
+        } else {
+          btnFindMolecule.classList.remove('btn-accent');
+        }
+
+        renderGrid();
+      }
+
+      // --- CONTAR VECINOS ---
+      function toggleCountNeighbors() {
+        let count = 0;
+        grid.forEach(row => row.forEach(val => { if (val) count++; }));
+        if (count < 8) autoFillGrid();
+
+        isCountingNeighbors = !isCountingNeighbors;
+        isFindingMolecule = false;
+        isDisplaced = false;
+
+        if (isCountingNeighbors) {
+          btnCountNeighbors.classList.add('btn-accent');
+          btnFindMolecule.classList.remove('btn-accent');
+          updateSeeing(
+            "La geometría macroscópica de cubos nace de la coordinación octaédrica submicro.",
+            "Cada ion tiene número de coordinación 6 (octaedro regular de iones opuestos).",
+            "La relación de radios r₊/r₋ = 0,563 predice exactamente una coordinación 6."
+          );
+        } else {
+          btnCountNeighbors.classList.remove('btn-accent');
+        }
+
+        renderGrid();
+      }
+
+      // --- SELECCIÓN DE IÓN DESDE LA BANDEJA ---
+      sourceNa.addEventListener('click', () => {
+        if (selectedTool === 'Na') {
+          selectedTool = null;
+          sourceNa.classList.remove('selected');
+        } else {
+          selectedTool = 'Na';
+          sourceNa.classList.add('selected');
+          sourceCl.classList.remove('selected');
+        }
+      });
+
+      sourceCl.addEventListener('click', () => {
+        if (selectedTool === 'Cl') {
+          selectedTool = null;
+          sourceCl.classList.remove('selected');
+        } else {
+          selectedTool = 'Cl';
+          sourceCl.classList.add('selected');
+          sourceNa.classList.remove('selected');
+        }
+      });
+
+      // Accesibilidad con teclado para la bandeja
+      sourceNa.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          sourceNa.click();
+        }
+      });
+      sourceCl.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          sourceCl.click();
+        }
+      });
+
+      // Soporte Drag & Drop (Mouse y Touch) desde la bandeja
+      let dragType = null;
+      function handleDragStart(type) {
+        dragType = type;
+      }
+
+      sourceNa.addEventListener('pointerdown', () => handleDragStart('Na'));
+      sourceCl.addEventListener('pointerdown', () => handleDragStart('Cl'));
+
+      // Evento de soltado sobre el SVG
+      svgStage.addEventListener('pointerup', (e) => {
+        if (!dragType) return;
+        const rect = svgStage.getBoundingClientRect();
+        // Convertir coordenadas del cliente a escala de viewBox (540x440)
+        const scaleX = 540 / rect.width;
+        const scaleY = 440 / rect.height;
+        const svgX = (e.clientX - rect.left) * scaleX;
+        const svgY = (e.clientY - rect.top) * scaleY;
+
+        // Buscar qué slot está más cerca
+        let closestSlot = null;
+        let minDist = 45; // tolerancia en px
+
+        for (let r = 0; r < ROWS; r++) {
+          for (let c = 0; c < COLS; c++) {
+            const cx = GRID_OFFSET_X + c * CELL_SIZE;
+            const cy = GRID_OFFSET_Y + r * CELL_SIZE;
+            const dist = Math.hypot(svgX - cx, svgY - cy);
+            if (dist < minDist) {
+              minDist = dist;
+              closestSlot = { r, c };
+            }
+          }
+        }
+
+        if (closestSlot) {
+          grid[closestSlot.r][closestSlot.c] = dragType;
+          isFindingMolecule = false;
+          isCountingNeighbors = false;
+          renderGrid();
+        }
+        dragType = null;
+      });
+
+      // --- MOTOR 3D SIMPLE HECHO A MANO (CUBO 3×3×3 ISOMÉTRICO CON ROTACIÓN) ---
+      let rotX = 0.55;
+      let rotY = -0.65;
+      let isDragging3D = false;
+      let lastMouseX = 0;
+      let lastMouseY = 0;
+      const ctx3D = canvas3D.getContext('2d');
+
+      // Generar los 27 iones del cubo 3×3×3 (x: -1..1, y: -1..1, z: -1..1)
+      const ions3D = [];
+      for (let x = -1; x <= 1; x++) {
+        for (let y = -1; y <= 1; y++) {
+          for (let z = -1; z <= 1; z++) {
+            // Alternancia estricta de cargas
+            const isNa = ((x + y + z) % 2 === 0);
+            ions3D.push({
+              x: x,
+              y: y,
+              z: z,
+              type: isNa ? 'Na' : 'Cl',
+              // Radio 3D a escala
+              radius: isNa ? 18 : 28,
+              isCenter: (x === 0 && y === 0 && z === 0)
+            });
+          }
+        }
+      }
+
+      function render3DCube() {
+        if (viewMode !== '3D') return;
+
+        ctx3D.clearRect(0, 0, canvas3D.width, canvas3D.height);
+
+        const centerX = canvas3D.width / 2;
+        const centerY = canvas3D.height / 2;
+        const SPACING_3D = 75;
+
+        // Proyección con matriz de rotación en X e Y
+        const cosX = Math.cos(rotX);
+        const sinX = Math.sin(rotX);
+        const cosY = Math.cos(rotY);
+        const sinY = Math.sin(rotY);
+
+        // Proyectar todos los puntos
+        const projected = ions3D.map((ion) => {
+          // Rotación en Y
+          const x1 = ion.x * cosY + ion.z * sinY;
+          const z1 = -ion.x * sinY + ion.z * cosY;
+
+          // Rotación en X
+          const y2 = ion.y * cosX - z1 * sinX;
+          const z2 = ion.y * sinX + z1 * cosX;
+
+          // Escala y proyección isométrica
+          const px = centerX + x1 * SPACING_3D;
+          const py = centerY + y2 * SPACING_3D;
+
+          return {
+            ...ion,
+            px,
+            py,
+            depth: z2
+          };
+        });
+
+        // 1. Dibujar aristas de la red 3D antes de los iones
+        ctx3D.lineWidth = 1.5;
+        for (let i = 0; i < projected.length; i++) {
+          for (let j = i + 1; j < projected.length; j++) {
+            const p1 = projected[i];
+            const p2 = projected[j];
+            // Solo conectamos vecinos inmediatos a distancia unitaria
+            const distSq = (p1.x - p2.x)**2 + (p1.y - p2.y)**2 + (p1.z - p2.z)**2;
+            if (distSq === 1) {
+              const isHighlightCenter = isCountingNeighbors && (p1.isCenter || p2.isCenter);
+              ctx3D.beginPath();
+              ctx3D.moveTo(p1.px, p1.py);
+              ctx3D.lineTo(p2.px, p2.py);
+              if (isHighlightCenter) {
+                ctx3D.strokeStyle = '#E07A1F';
+                ctx3D.lineWidth = 3.5;
+              } else {
+                ctx3D.strokeStyle = 'rgba(148, 163, 184, 0.45)';
+                ctx3D.lineWidth = 1.5;
+              }
+              ctx3D.stroke();
+            }
+          }
+        }
+
+        // 2. Ordenar de atrás hacia adelante (algoritmo del pintor)
+        projected.sort((a, b) => a.depth - b.depth);
+
+        // 3. Dibujar esferas
+        projected.forEach(ion => {
+          ctx3D.save();
+
+          // Sombra de la esfera
+          ctx3D.beginPath();
+          ctx3D.arc(ion.px + 2, ion.py + 4, ion.radius, 0, Math.PI * 2);
+          ctx3D.fillStyle = 'rgba(15, 23, 42, 0.22)';
+          ctx3D.fill();
+
+          // Degradado de esfera según tipo
+          const grad = ctx3D.createRadialGradient(
+            ion.px - ion.radius * 0.35,
+            ion.py - ion.radius * 0.35,
+            ion.radius * 0.1,
+            ion.px,
+            ion.py,
+            ion.radius
+          );
+
+          if (ion.type === 'Na') {
+            grad.addColorStop(0, '#D6B8FF');
+            grad.addColorStop(0.45, '#8A4FFF');
+            grad.addColorStop(0.85, '#552F94');
+            grad.addColorStop(1, '#361765');
+          } else {
+            grad.addColorStop(0, '#76EBA5');
+            grad.addColorStop(0.4, '#2E8B57');
+            grad.addColorStop(0.85, '#1B613A');
+            grad.addColorStop(1, '#0E3D22');
+          }
+
+          ctx3D.beginPath();
+          ctx3D.arc(ion.px, ion.py, ion.radius, 0, Math.PI * 2);
+          ctx3D.fillStyle = grad;
+          ctx3D.fill();
+
+          // Resaltado de vecino / centro
+          if (isCountingNeighbors && ion.isCenter) {
+            ctx3D.lineWidth = 3;
+            ctx3D.strokeStyle = '#FFD700';
+            ctx3D.stroke();
+          }
+
+          // Texto
+          ctx3D.fillStyle = '#FFFFFF';
+          ctx3D.font = `bold ${ion.radius * 0.7}px Arial`;
+          ctx3D.textAlign = 'center';
+          ctx3D.textBaseline = 'middle';
+          ctx3D.fillText(ion.type === 'Na' ? 'Na⁺' : 'Cl⁻', ion.px, ion.py);
+
+          ctx3D.restore();
+        });
+      }
+
+      // Interacción de rotación 3D
+      canvas3D.addEventListener('pointerdown', (e) => {
+        isDragging3D = true;
+        lastMouseX = e.clientX;
+        lastMouseY = e.clientY;
+      });
+
+      window.addEventListener('pointermove', (e) => {
+        if (!isDragging3D || viewMode !== '3D') return;
+        const deltaX = e.clientX - lastMouseX;
+        const deltaY = e.clientY - lastMouseY;
+        rotY += deltaX * 0.012;
+        rotX += deltaY * 0.012;
+        lastMouseX = e.clientX;
+        lastMouseY = e.clientY;
+        render3DCube();
+      });
+
+      window.addEventListener('pointerup', () => {
+        isDragging3D = false;
+      });
+
+      // --- CAMBIO ENTRE MODOS 2D Y 3D ---
+      function setViewMode(mode) {
+        viewMode = mode;
+        if (mode === '3D') {
+          svgStage.style.display = 'none';
+          canvas3D.style.display = 'block';
+          hint3D.style.display = 'block';
+          ionTray.style.display = 'none';
+          tab2D.classList.remove('active');
+          tab2D.setAttribute('aria-selected', 'false');
+          tab3D.classList.add('active');
+          tab3D.setAttribute('aria-selected', 'true');
+          btnToggle3D.textContent = '📐 Volver a grilla 2D';
+          render3DCube();
+          updateSeeing(
+            "Cubo 3×3×3 del cristal: los iones se apilan en capas perfectamente alternadas.",
+            "Giralo con el cursor: cada catión Na⁺ está coordinado octaédricamente por 6 aniones Cl⁻.",
+            "La simetría cúbica del cristal es consecuencia directa del empaquetamiento atómico 3D."
+          );
+        } else {
+          svgStage.style.display = 'block';
+          canvas3D.style.display = 'none';
+          hint3D.style.display = 'none';
+          ionTray.style.display = 'flex';
+          tab3D.classList.remove('active');
+          tab3D.setAttribute('aria-selected', 'false');
+          tab2D.classList.add('active');
+          tab2D.setAttribute('aria-selected', 'true');
+          btnToggle3D.textContent = '🧊 Vista 3D simple';
+          renderGrid();
+        }
+      }
+
+      tab2D.addEventListener('click', () => setViewMode('2D'));
+      tab3D.addEventListener('click', () => setViewMode('3D'));
+      btnToggle3D.addEventListener('click', () => {
+        setViewMode(viewMode === '2D' ? '3D' : '2D');
+      });
+
+      // --- REINICIAR TODO ---
+      function resetApp() {
+        grid = Array(ROWS).fill(null).map(() => Array(COLS).fill(null));
+        selectedTool = null;
+        isDisplaced = false;
+        isFindingMolecule = false;
+        isCountingNeighbors = false;
+        sourceNa.classList.remove('selected');
+        sourceCl.classList.remove('selected');
+        btnFindMolecule.classList.remove('btn-accent');
+        btnCountNeighbors.classList.remove('btn-accent');
+        btnDisplaceRow.textContent = '⚡ Desplazar una fila (Fractura)';
+        btnDisplaceRow.classList.remove('btn-outline-danger');
+        btnDisplaceRow.classList.add('btn-accent');
+        setViewMode('2D');
+        renderGrid();
+        updateSeeing(
+          "Un grano de sal de mesa es un cristal cúbico visible, duro y quebradizo.",
+          "La grilla está vacía. Arrastrá iones Na⁺ y Cl⁻ para armar la red ordenada.",
+          "La fórmula 'NaCl' expresa la proporción mínima 1:1, no moléculas aisladas."
+        );
+      }
+
+      btnResetTop.addEventListener('click', resetApp);
+      btnAutoFill.addEventListener('click', autoFillGrid);
+      btnDisplaceRow.addEventListener('click', toggleDisplaceRow);
+      btnFindMolecule.addEventListener('click', toggleFindMolecule);
+      btnCountNeighbors.addEventListener('click', toggleCountNeighbors);
+
+      // --- MODAL DE GUÍA DE TRABAJO ---
+      function openGuide() {
+        guideModal.classList.add('open');
+      }
+      function closeGuide() {
+        guideModal.classList.remove('open');
+      }
+
+      btnGuide.addEventListener('click', openGuide);
+      btnCloseGuide.addEventListener('click', closeGuide);
+      btnDoneGuide.addEventListener('click', closeGuide);
+      btnPrintGuide.addEventListener('click', () => {
+        window.print();
+      });
+
+      guideModal.addEventListener('click', (e) => {
+        if (e.target === guideModal) closeGuide();
+      });
+
+      window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && guideModal.classList.contains('open')) {
+          closeGuide();
+        }
+      });
+
+      // --- INICIO ---
+      initGridSlots();
+      renderGrid();
+
+    })();
+  </script>
+</body>
+</html>
+<!--
+================================================================================
+REFERENCIAS TÉCNICAS Y DATOS EXPERIMENTALES EMPLEADOS (CHANG, 12.ª ED.):
+- Datos usados:
+  1. Radio iónico del catión Na⁺: 102 pm (0,102 nm).
+     Fuente: Chang, Raymond y Goldsby, Kenneth A. "Química", 12.ª ed., Capítulo 8: "Relaciones periódicas entre los elementos", Tabla 8.3 ("Radios iónicos de algunos iones comunes en picómetros").
+  2. Radio iónico del anión Cl⁻: 181 pm (0,181 nm).
+     Fuente: Chang, Raymond y Goldsby, Kenneth A. "Química", 12.ª ed., Capítulo 8: "Relaciones periódicas entre los elementos", Tabla 8.3 ("Radios iónicos de algunos iones comunes en picómetros").
+  3. Relación de radios iónicos r₊ / r₋: 102 pm / 181 pm = 0,563.
+     Criterio cristalográfico: Al estar comprendida entre 0,414 y 0,732, predice de forma directa la coordinación octaédrica (índice de coordinación = 6 vecinos inmediatos por ion), característica de la estructura tipo sal de roca (rocasal, red cúbica centrada en las caras FCC de iones Cl⁻ con Na⁺ en los huecos octaédricos).
+  4. Electronegatividades de Pauling: Na = 0,9; Cl = 3,0; Diferencia: ΔEN = 2,1.
+     Fuente: Chang, Raymond y Goldsby, Kenneth A. "Química", 12.ª ed., Capítulo 9: "El enlace químico I: Conceptos básicos", Figura 9.5 ("Electronegatividades de los elementos comunes según Pauling").
+     Criterio didáctico: La escala es continua. No se utiliza el corte artificial de 1,7; se adopta el criterio de "≈ 2,0 como regla práctica, con excepciones".
+  5. Distancia internuclear de equilibrio Na-Cl en la red: r(Na⁺) + r(Cl⁻) = 102 pm + 181 pm = 283 pm (experimental cristalina en Chang: 282 pm).
+
+incluiré las referencias técnicas en el comentario final tras procesar todos los cálculos requeridos. [BLOQUE COMÚN]
+================================================================================
+-->

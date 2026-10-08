@@ -1,1 +1,1254 @@
-$file:/workspace/simuladores-uniones/simuladores/sim-c08-mar-electrones/index.html
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Golpeá el material · Química 5.º</title>
+<style>
+  :root {
+    --ink: #1E293B;
+    --title: #1F5C8B;
+    --accent: #E07A1F;
+    --ok: #2E8B57;
+    --bad: #C0392B;
+    --panel: #EEF4F9;
+    --line: #D8E2EC;
+    --cream: #FFF4EA;
+    --violet: #6D4AA8;
+    --r: 16px;
+  }
+  * { box-sizing: border-box; }
+  html { color-scheme: light; }
+  body {
+    margin: 0;
+    background: #FFFFFF;
+    color: var(--ink);
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 16px;
+    line-height: 1.45;
+  }
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    height: 6px;
+    background: var(--title);
+  }
+  .skip {
+    position: absolute;
+    left: 12px;
+    top: -48px;
+    background: var(--title);
+    color: #fff;
+    padding: 10px 14px;
+    border-radius: 10px;
+    z-index: 40;
+  }
+  .skip:focus { top: 14px; }
+  .wrap {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 22px 18px 48px;
+  }
+  .kicker {
+    margin: 0 0 8px;
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  h1 {
+    margin: 0 0 8px;
+    color: var(--title);
+    font-size: clamp(1.55rem, 2.4vw, 2rem);
+    line-height: 1.2;
+    font-weight: 700;
+  }
+  .consigna {
+    margin: 0;
+    max-width: 46rem;
+  }
+  .layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 280px;
+    gap: 16px;
+    margin-top: 18px;
+    align-items: start;
+  }
+  .stage {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--r);
+    padding: 14px;
+  }
+  .pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .card {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 12px;
+    min-width: 0;
+  }
+  .card-h {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .card h2 {
+    margin: 0;
+    color: var(--title);
+    font-size: 1.15rem;
+  }
+  .formula {
+    margin: 0;
+    color: var(--accent);
+    font-weight: 700;
+    background: var(--cream);
+    border-radius: 999px;
+    padding: 4px 10px;
+    font-size: 0.95rem;
+  }
+  .cap {
+    margin: 0 0 6px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--title);
+  }
+  .macro {
+    background: #F8FBFD;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 6px 8px 4px;
+    margin-bottom: 8px;
+  }
+  .macro svg { width: 100%; height: 72px; display: block; }
+  .bar-b, .heat, .bulb-on { display: none; }
+  .metal[data-golpe="1"] .bar-s { display: none; }
+  .metal[data-golpe="1"] .bar-b { display: block; }
+  .metal[data-calor="1"] .heat { display: block; }
+  .metal[data-pila="1"] .bulb-off { display: none; }
+  .metal[data-pila="1"] .bulb-on { display: block; }
+  .salt[data-golpe="1"] .half-r { transform: translate(14px, 7px); }
+  .lamp {
+    margin: 0;
+    min-height: 1.3em;
+    font-size: 14px;
+    font-weight: 700;
+  }
+  .lamp.on { color: var(--ok); }
+  .canvas-wrap {
+    position: relative;
+    aspect-ratio: 10 / 7.2;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .hint {
+    margin: 8px 0 0;
+    font-size: 14px;
+  }
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 14px;
+    list-style: none;
+    margin: 12px 0 0;
+    padding: 0;
+    font-size: 14px;
+  }
+  .legend li { display: flex; align-items: center; gap: 8px; }
+  .swatch {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    flex: 0 0 auto;
+  }
+  .swatch.cat { background: radial-gradient(circle at 35% 35%, #fff, #8B98A5 55%, #5C6B7A); }
+  .swatch.e { background: var(--violet); width: 10px; height: 10px; }
+  .swatch.an { background: radial-gradient(circle at 35% 35%, #F6C9A4, #E07A1F 60%, #B85E12); }
+  .nota-modelo { margin: 10px 0 0; font-size: 14px; }
+  .controls {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: var(--r);
+    padding: 14px;
+  }
+  .controls h2, .seeing h2 {
+    margin: 0 0 10px;
+    color: var(--title);
+    font-size: 1.05rem;
+  }
+  .controls p.lead { margin: 0 0 12px; font-size: 14px; }
+  .stack { display: flex; flex-direction: column; gap: 10px; }
+  button {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 16px;
+    min-height: 48px;
+    padding: 10px 14px;
+    border-radius: 12px;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  button:focus-visible, .choice:focus-within, textarea:focus-visible, a:focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 2px;
+  }
+  .primary {
+    background: var(--title);
+    color: #fff;
+    border: 2px solid var(--title);
+    font-weight: 700;
+  }
+  .primary:hover { background: #18496D; }
+  .secondary {
+    background: #fff;
+    color: var(--title);
+    border: 2px solid var(--title);
+  }
+  .secondary:hover, button[aria-pressed="true"] { background: var(--panel); }
+  button:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+  .mini { margin: 8px 0 0; font-size: 14px; }
+  .seeing {
+    grid-column: 1 / -1;
+    background: var(--cream);
+    border: 1px solid #F0D7C0;
+    border-radius: var(--r);
+    padding: 14px 16px;
+  }
+  .row {
+    display: grid;
+    grid-template-columns: 108px minmax(0, 1fr);
+    gap: 8px;
+    align-items: start;
+    margin: 8px 0 0;
+  }
+  .tag {
+    display: inline-block;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 700;
+    border-radius: 999px;
+    padding: 4px 8px;
+    line-height: 1.2;
+  }
+  .tag.macro { color: var(--ok); background: #E7F6EE; }
+  .tag.sub { color: var(--violet); background: #F3EEF8; }
+  .tag.sim { color: #1E293B; background: var(--accent); }
+  .msg { margin: 0; }
+  .actions {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .actions button { min-width: 160px; }
+  .reduce-only { display: none; margin: 8px 0 0; font-size: 14px; }
+  html.reduce .reduce-only { display: block; }
+  .guia[hidden] { display: none !important; }
+  .guia {
+    position: fixed;
+    inset: 0;
+    z-index: 30;
+    background: rgba(30, 41, 59, 0.45);
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 18px 12px;
+    overflow: auto;
+  }
+  .guia-card {
+    background: #fff;
+    color: var(--ink);
+    width: min(720px, 100%);
+    border-radius: 16px;
+    border: 1px solid var(--line);
+    padding: 18px 18px 22px;
+    margin: 8px 0 24px;
+  }
+  .guia-top {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .guia-card h2 { margin: 0 0 6px; color: var(--title); font-size: 1.35rem; }
+  .guia-card h3 { margin: 0 0 8px; color: var(--title); font-size: 1.05rem; }
+  fieldset {
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    margin: 0 0 12px;
+    padding: 12px 12px 14px;
+  }
+  legend { font-weight: 700; color: var(--title); padding: 0 4px; }
+  .qtype {
+    margin: 0 0 6px;
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .choice {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 44px;
+    padding: 6px 8px;
+    border-radius: 12px;
+  }
+  .choice input { width: 22px; height: 22px; }
+  .lines {
+    width: 100%;
+    margin-top: 8px;
+    border: none;
+    border-radius: 8px;
+    background-color: #fff;
+    background-image: repeating-linear-gradient(#fff, #fff 27px, var(--line) 28px);
+    line-height: 28px;
+    min-height: 84px;
+    padding: 0 4px;
+    font: inherit;
+    color: inherit;
+    resize: vertical;
+  }
+  .fb {
+    margin: 8px 0 0;
+    background: var(--panel);
+    border-radius: 12px;
+    padding: 8px 10px;
+  }
+  .pista { margin-top: 8px; }
+  .pista summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; color: var(--title); font-weight: 700; }
+  .solo-papel { display: none; }
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+  @media (max-width: 860px) {
+    .layout { grid-template-columns: 1fr; }
+    .controls { position: static; }
+  }
+  @media (min-width: 861px) {
+    .controls { position: sticky; top: 16px; }
+  }
+  @media (max-width: 720px) {
+    .pair { grid-template-columns: 1fr; }
+    .wrap { padding: 16px 12px 36px; }
+    .row { grid-template-columns: 1fr; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+    .salt[data-golpe="1"] .half-r { transform: translate(14px, 7px); }
+  }
+  @media print {
+    body { background: #fff; }
+    .topbar, .wrap, .no-print, .pista, .solo-pantalla { display: none !important; }
+    .guia {
+      position: static;
+      background: #fff;
+      padding: 0;
+      overflow: visible;
+      display: block !important;
+    }
+    .guia[hidden] { display: block !important; }
+    .guia-card {
+      border: none;
+      border-radius: 0;
+      width: auto;
+      margin: 0;
+      padding: 0;
+    }
+    .solo-papel { display: block !important; }
+    .lines { min-height: 84px; }
+    a { color: inherit; text-decoration: none; }
+  }
+</style>
+</head>
+<body>
+<a class="skip" href="#controles">Saltar a los controles</a>
+<div class="topbar"></div>
+<main class="wrap">
+  <header>
+    <p class="kicker">QUÍMICA 5.º · UNIONES QUÍMICAS · CLASE 08</p>
+    <h1>Golpeá el material</h1>
+    <p class="consigna">Los electrones del metal ya recorren el sólido: la pila no los crea y el golpe no los “suelta”.</p>
+  </header>
+
+  <div class="layout">
+    <section class="stage" aria-labelledby="sim-title">
+      <h2 id="sim-title" class="visually-hidden">Simulación del metal y de la sal</h2>
+      <div class="pair">
+        <article class="card metal" id="card-metal" data-golpe="0" data-pila="0" data-calor="0">
+          <header class="card-h">
+            <h2>Metal</h2>
+            <p class="formula">Cu(s)</p>
+          </header>
+          <p class="cap">Observación</p>
+          <div class="macro">
+            <svg viewBox="0 0 280 72" aria-hidden="true">
+              <rect x="6" y="24" width="18" height="28" rx="2" fill="none" stroke="#1F5C8B" stroke-width="2"/>
+              <rect x="10" y="18" width="10" height="6" rx="1" fill="#1F5C8B"/>
+              <path d="M24 32 H46" fill="none" stroke="#1F5C8B" stroke-width="2"/>
+              <path d="M190 32 H206" fill="none" stroke="#1F5C8B" stroke-width="2"/>
+              <g class="bar-s">
+                <rect x="46" y="26" width="144" height="18" rx="8" fill="#D5DEE6" stroke="#6E7C89"/>
+              </g>
+              <g class="bar-b">
+                <path d="M46 44 Q118 16 190 36" fill="none" stroke="#9AABBA" stroke-width="16" stroke-linecap="round"/>
+                <path d="M46 44 Q118 16 190 36" fill="none" stroke="#F4F7FB" stroke-width="7" stroke-linecap="round"/>
+              </g>
+              <g class="heat" fill="none" stroke="#E07A1F" stroke-width="2" stroke-linecap="round">
+                <path d="M78 16 q5 -7 10 0"/>
+                <path d="M108 14 q5 -7 10 0"/>
+                <path d="M138 16 q5 -7 10 0"/>
+              </g>
+              <g transform="translate(206,22)">
+                <circle cx="18" cy="16" r="14" fill="#F8FBFD" stroke="#1F5C8B" stroke-width="2"/>
+                <g class="bulb-off" stroke="#9AABBA" stroke-width="2" fill="none">
+                  <path d="M12 16 h12 M18 10 v12"/>
+                </g>
+                <g class="bulb-on">
+                  <circle cx="18" cy="16" r="8" fill="#F6C14B"/>
+                </g>
+                <rect x="12" y="30" width="12" height="6" rx="1" fill="#1F5C8B"/>
+              </g>
+            </svg>
+            <p class="lamp" id="lamp-metal">Foquito apagado</p>
+          </div>
+          <p class="cap">Modelo de partículas</p>
+          <div class="canvas-wrap">
+            <canvas id="cv-metal" aria-describedby="desc-metal"></canvas>
+          </div>
+          <p id="desc-metal" class="visually-hidden">Cationes como esferas con signo más y electrones como puntitos que recorren todo el volumen. No hay órbitas.</p>
+          <p class="hint" id="hint-metal">Los puntitos ya se mueven con la pila desconectada.</p>
+        </article>
+
+        <article class="card salt" id="card-salt" data-golpe="0" data-pila="0" data-calor="0">
+          <header class="card-h">
+            <h2>Sal</h2>
+            <p class="formula">NaCl(s)</p>
+          </header>
+          <p class="cap">Observación</p>
+          <div class="macro">
+            <svg viewBox="0 0 280 72" aria-hidden="true">
+              <rect x="6" y="24" width="18" height="28" rx="2" fill="none" stroke="#1F5C8B" stroke-width="2"/>
+              <rect x="10" y="18" width="10" height="6" rx="1" fill="#1F5C8B"/>
+              <path d="M24 32 H40" fill="none" stroke="#1F5C8B" stroke-width="2"/>
+              <path d="M168 32 H206" fill="none" stroke="#1F5C8B" stroke-width="2"/>
+              <g class="half-l">
+                <rect x="42" y="22" width="16" height="16" rx="3" fill="#8B98A5"/>
+                <rect x="60" y="22" width="16" height="16" rx="3" fill="#E07A1F"/>
+                <rect x="42" y="40" width="16" height="16" rx="3" fill="#E07A1F"/>
+                <rect x="60" y="40" width="16" height="16" rx="3" fill="#8B98A5"/>
+              </g>
+              <g class="half-r">
+                <rect x="80" y="22" width="16" height="16" rx="3" fill="#8B98A5"/>
+                <rect x="98" y="22" width="16" height="16" rx="3" fill="#E07A1F"/>
+                <rect x="80" y="40" width="16" height="16" rx="3" fill="#E07A1F"/>
+                <rect x="98" y="40" width="16" height="16" rx="3" fill="#8B98A5"/>
+              </g>
+              <g transform="translate(206,22)">
+                <circle cx="18" cy="16" r="14" fill="#F8FBFD" stroke="#1F5C8B" stroke-width="2"/>
+                <g stroke="#9AABBA" stroke-width="2" fill="none">
+                  <path d="M12 16 h12 M18 10 v12"/>
+                </g>
+                <rect x="12" y="30" width="12" height="6" rx="1" fill="#1F5C8B"/>
+              </g>
+            </svg>
+            <p class="lamp" id="lamp-salt">Foquito apagado</p>
+          </div>
+          <p class="cap">Modelo de partículas</p>
+          <div class="canvas-wrap">
+            <canvas id="cv-salt" aria-describedby="desc-salt"></canvas>
+          </div>
+          <p id="desc-salt" class="visually-hidden">Red de iones positivos y negativos alternados. No hay puntitos móviles.</p>
+          <p class="hint" id="hint-salt">Acá no hay puntitos: los iones están fijos.</p>
+        </article>
+      </div>
+      <ul class="legend">
+        <li><span class="swatch cat" aria-hidden="true"></span> Catión: esfera gris con +</li>
+        <li><span class="swatch e" aria-hidden="true"></span> Electrón deslocalizado</li>
+        <li><span class="swatch an" aria-hidden="true"></span> Anión de la sal: esfera naranja con −</li>
+      </ul>
+      <p class="nota-modelo">Esquema del modelo. No es una foto y no hay núcleos con electrones girando.</p>
+      <p class="reduce-only">Menos movimiento: las flechas muestran hacia dónde irían los electrones o el deslizamiento.</p>
+    </section>
+
+    <section class="controls" id="controles" aria-labelledby="ctrl-title">
+      <h2 id="ctrl-title">Controles</h2>
+      <p class="lead">Mirá los dos paneles cada vez que apretás un botón.</p>
+      <div class="stack">
+        <button type="button" class="primary" id="btn-golpe">Martillazo</button>
+        <button type="button" class="secondary" id="btn-pila" aria-pressed="false">Conectar pila</button>
+        <button type="button" class="secondary" id="btn-calor" aria-pressed="false">Calentar</button>
+        <button type="button" class="secondary" id="btn-pausa" aria-pressed="false">Pausa</button>
+      </div>
+      <p class="mini" id="pausa-nota" hidden>La escena quedó fija. Apretá Seguir para ver el movimiento.</p>
+    </section>
+
+    <section class="seeing" aria-live="polite" aria-labelledby="ver-title">
+      <h2 id="ver-title">Qué estás viendo</h2>
+      <div class="row">
+        <span class="tag macro">Macro</span>
+        <p class="msg" id="msg-macro"></p>
+      </div>
+      <div class="row">
+        <span class="tag sub">Submicro</span>
+        <p class="msg" id="msg-sub"></p>
+      </div>
+      <div class="row">
+        <span class="tag sim">Simbólico</span>
+        <p class="msg" id="msg-sim"></p>
+      </div>
+    </section>
+
+    <div class="actions">
+      <button type="button" class="secondary" id="btn-reset">Reiniciar</button>
+      <button type="button" class="secondary" id="btn-guia" aria-haspopup="dialog" aria-controls="guia">Guía de trabajo</button>
+    </div>
+  </div>
+</main>
+
+<div id="guia" class="guia" hidden role="dialog" aria-modal="true" aria-labelledby="guia-titulo">
+  <div class="guia-card">
+    <div class="guia-top">
+      <div>
+        <p class="kicker">QUÍMICA 5.º · UNIONES QUÍMICAS · CLASE 08</p>
+        <h2 id="guia-titulo">Guía de trabajo</h2>
+        <p>Anotá la pregunta 1 antes de apretar Martillazo. Después contrastá con lo que ves.</p>
+        <p class="solo-papel">Nombre: ______________________________ Curso: ____________</p>
+      </div>
+      <button type="button" class="secondary no-print" id="btn-cerrar">Cerrar</button>
+    </div>
+
+    <fieldset>
+      <legend>1. Predicción</legend>
+      <p class="qtype">Antes de tocar</p>
+      <p>¿Qué material se va a romper con el martillazo?</p>
+      <div class="solo-pantalla" role="radiogroup" aria-label="Predicción del martillazo">
+        <label class="choice"><input type="radio" name="pred" value="metal"> El metal</label>
+        <label class="choice"><input type="radio" name="pred" value="sal"> La sal</label>
+        <label class="choice"><input type="radio" name="pred" value="ambos"> Los dos</label>
+        <label class="choice"><input type="radio" name="pred" value="ninguno"> Ninguno</label>
+        <button type="button" class="secondary" id="btn-contrastar">Contrastar con el modelo</button>
+        <p class="fb" id="fb-pred" hidden></p>
+      </div>
+      <p class="solo-papel">Tu predicción: _______________________________________________</p>
+      <label for="t1">Justificá en una oración, sin mirar todavía el golpe.</label>
+      <textarea id="t1" class="lines" rows="2"></textarea>
+    </fieldset>
+
+    <fieldset>
+      <legend>2. Observación</legend>
+      <p class="qtype">Después de conectar la pila</p>
+      <p>¿Qué hace cada foquito? ¿Los puntitos del metal aparecieron ahora o ya se movían?</p>
+      <label class="visually-hidden" for="t2">Respuesta de la observación de la pila</label>
+      <textarea id="t2" class="lines" rows="3"></textarea>
+      <details class="pista">
+        <summary>Pista después de mirar</summary>
+        <p>El foquito del metal enciende porque esos electrones ya estaban y ahora derivan. El de la sal no: no hay puntitos que viajen.</p>
+      </details>
+    </fieldset>
+
+    <fieldset>
+      <legend>3. Observación</legend>
+      <p class="qtype">Después del martillazo</p>
+      <p>¿El metal queda de una pieza? ¿Qué cargas quedan enfrentadas en la grieta de la sal?</p>
+      <label class="visually-hidden" for="t3">Respuesta de la observación del martillazo</label>
+      <textarea id="t3" class="lines" rows="3"></textarea>
+      <details class="pista">
+        <summary>Pista después de mirar</summary>
+        <p>El metal queda entero: las capas se corren dentro del mar de electrones. En la sal, la grieta enfrenta cargas iguales.</p>
+      </details>
+    </fieldset>
+
+    <fieldset>
+      <legend>4. Explicación</legend>
+      <p class="qtype">Por qué</p>
+      <p>¿Por qué el metal se dobla sin partirse y la sal se raja? Usá cationes y electrones, no “porque es frágil”.</p>
+      <label class="visually-hidden" for="t4">Explicación del golpe</label>
+      <textarea id="t4" class="lines" rows="3"></textarea>
+      <details class="pista">
+        <summary>Pista después de escribir</summary>
+        <p>Al deslizar cationes, el mar de electrones sigue uniendo el sólido. En la sal no hay ese mar: iones del mismo signo se repelen y abren la grieta.</p>
+      </details>
+    </fieldset>
+
+    <fieldset>
+      <legend>5. Transferencia</legend>
+      <p class="qtype">Otra situación</p>
+      <p>¿Por qué la sal disuelta en agua sí conduce, si el cristal sólido no?</p>
+      <label class="visually-hidden" for="t5">Respuesta de transferencia</label>
+      <textarea id="t5" class="lines" rows="3"></textarea>
+      <details class="pista">
+        <summary>Pista después de escribir</summary>
+        <p>En agua los iones se sueltan y se mueven: conducen ellos, no electrones nuevos. En el cristal sólido esos iones están fijos.</p>
+      </details>
+    </fieldset>
+
+    <div class="actions no-print">
+      <button type="button" class="primary" id="btn-imprimir">Imprimir la guía</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  var COLS = 5;
+  var ROWS = 4;
+  var SCOLS = 5;
+  var SROWS = 4;
+  var state = {
+    pila: false,
+    heat: false,
+    paused: false,
+    hammered: false,
+    hammering: false,
+    hammerT: 0,
+    shear: 0,
+    crack: 0,
+    reduce: false,
+    time: 0
+  };
+  var electrons = [];
+  var phases = [];
+  var saltPhases = [];
+  var i;
+  for (i = 0; i < COLS * ROWS; i++) phases.push(Math.random() * 6.28);
+  for (i = 0; i < SCOLS * SROWS; i++) saltPhases.push(Math.random() * 6.28);
+
+  var cvMetal = document.getElementById("cv-metal");
+  var cvSalt = document.getElementById("cv-salt");
+  var btnGolpe = document.getElementById("btn-golpe");
+  var btnPila = document.getElementById("btn-pila");
+  var btnCalor = document.getElementById("btn-calor");
+  var btnPausa = document.getElementById("btn-pausa");
+  var btnReset = document.getElementById("btn-reset");
+  var btnGuia = document.getElementById("btn-guia");
+  var btnCerrar = document.getElementById("btn-cerrar");
+  var btnImprimir = document.getElementById("btn-imprimir");
+  var btnContrastar = document.getElementById("btn-contrastar");
+  var guia = document.getElementById("guia");
+  var cardMetal = document.getElementById("card-metal");
+  var cardSalt = document.getElementById("card-salt");
+  var msgMacro = document.getElementById("msg-macro");
+  var msgSub = document.getElementById("msg-sub");
+  var msgSim = document.getElementById("msg-sim");
+  var lampMetal = document.getElementById("lamp-metal");
+  var lampSalt = document.getElementById("lamp-salt");
+  var hintMetal = document.getElementById("hint-metal");
+  var hintSalt = document.getElementById("hint-salt");
+  var pausaNota = document.getElementById("pausa-nota");
+  var fbPred = document.getElementById("fb-pred");
+  var descMetal = document.getElementById("desc-metal");
+  var descSalt = document.getElementById("desc-salt");
+  var lastFocus = null;
+  var lastTs = 0;
+
+  function seedElectrons() {
+    electrons = [];
+    var n = COLS * ROWS;
+    for (var k = 0; k < n; k++) {
+      electrons.push({
+        u: 0.1 + Math.random() * 0.8,
+        v: 0.1 + Math.random() * 0.8,
+        vx: (Math.random() - 0.5) * 0.28,
+        vy: (Math.random() - 0.5) * 0.28
+      });
+    }
+  }
+
+  var mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+  function syncReduce() {
+    state.reduce = mq.matches;
+    document.documentElement.classList.toggle("reduce", state.reduce);
+    if (state.reduce && state.hammering) {
+      state.shear = 1;
+      state.crack = 1;
+      state.hammering = false;
+    }
+  }
+  syncReduce();
+  if (mq.addEventListener) mq.addEventListener("change", syncReduce);
+
+  function metalBox(w, h, shear) {
+    var left = w * 0.08;
+    var right = w * 0.92;
+    var top = h * 0.1;
+    var bottom = h * 0.9;
+    var slip = (right - left) * 0.26 * shear;
+    return { left: left, right: right, top: top, bottom: bottom, slip: slip };
+  }
+
+  function uvToXy(u, v, box) {
+    var y = box.top + v * (box.bottom - box.top);
+    var shift = (1 - v) * box.slip;
+    var x = box.left + shift + u * (box.right - box.left);
+    return { x: x, y: y };
+  }
+
+  function polyOf(box) {
+    return [
+      [box.left + box.slip, box.top],
+      [box.right + box.slip, box.top],
+      [box.right, box.bottom],
+      [box.left, box.bottom]
+    ];
+  }
+
+  function tracePoly(ctx, poly) {
+    ctx.beginPath();
+    ctx.moveTo(poly[0][0], poly[0][1]);
+    for (var p = 1; p < poly.length; p++) ctx.lineTo(poly[p][0], poly[p][1]);
+    ctx.closePath();
+  }
+
+  function sphere(ctx, x, y, r, light, mid, dark) {
+    var g = ctx.createRadialGradient(x - r * 0.35, y - r * 0.38, r * 0.08, x, y, r);
+    g.addColorStop(0, light);
+    g.addColorStop(0.55, mid);
+    g.addColorStop(1, dark);
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fillStyle = g;
+    ctx.fill();
+  }
+
+  function glyph(ctx, x, y, text, size, color) {
+    ctx.fillStyle = color;
+    ctx.font = "700 " + size + "px Arial";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(text, x, y + size * 0.06);
+  }
+
+  function arrow(ctx, x1, y1, x2, y2, color) {
+    var ang = Math.atan2(y2 - y1, x2 - x1);
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+    var ah = 8;
+    ctx.beginPath();
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(x2 - ah * Math.cos(ang - 0.45), y2 - ah * Math.sin(ang - 0.45));
+    ctx.lineTo(x2 - ah * Math.cos(ang + 0.45), y2 - ah * Math.sin(ang + 0.45));
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  function doubleArrow(ctx, x, y, len, color) {
+    arrow(ctx, x, y + len, x, y - len * 0.15, color);
+    arrow(ctx, x, y - len, x, y + len * 0.15, color);
+  }
+
+  function fit(cv) {
+    var rect = cv.getBoundingClientRect();
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var w = Math.max(1, Math.round(rect.width));
+    var h = Math.max(1, Math.round(rect.height));
+    var bw = Math.round(w * dpr);
+    var bh = Math.round(h * dpr);
+    if (cv.width !== bw || cv.height !== bh) {
+      cv.width = bw;
+      cv.height = bh;
+    }
+    var ctx = cv.getContext("2d");
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { ctx: ctx, w: w, h: h };
+  }
+
+  function wobble(phase, on) {
+    if (state.paused || state.reduce || !on) return { x: 0, y: 0 };
+    var amp = state.heat ? 4.2 : 0.85;
+    return {
+      x: Math.sin(state.time * 8 + phase) * amp,
+      y: Math.cos(state.time * 6.3 + phase) * amp * 0.75
+    };
+  }
+
+  function step(dt) {
+    state.time += dt;
+    if (state.hammering) {
+      state.hammerT += dt;
+      var t = Math.min(1, state.hammerT / 0.85);
+      var e = 1 - Math.pow(1 - t, 3);
+      state.shear = e;
+      state.crack = e;
+      if (t >= 1) state.hammering = false;
+    }
+    var drift = state.pila ? 0.18 : 0;
+    for (var k = 0; k < electrons.length; k++) {
+      var el = electrons[k];
+      el.vx += (Math.random() - 0.5) * 1.1 * dt;
+      el.vy += (Math.random() - 0.5) * 1.1 * dt;
+      el.vx *= 1 - 0.55 * dt;
+      el.vy *= 1 - 0.55 * dt;
+      var sp = Math.hypot(el.vx, el.vy);
+      var max = 0.34;
+      if (sp > max) {
+        el.vx = (el.vx / sp) * max;
+        el.vy = (el.vy / sp) * max;
+      }
+      if (sp < 0.06) {
+        el.vx += (Math.random() - 0.5) * 0.25;
+        el.vy += (Math.random() - 0.5) * 0.25;
+      }
+      el.u += (el.vx + drift) * dt;
+      el.v += el.vy * dt;
+      if (state.pila && el.u > 0.97) el.u = 0.05;
+      else if (el.u > 0.95) { el.u = 0.95; el.vx = -Math.abs(el.vx); }
+      if (el.u < 0.05) { el.u = 0.05; el.vx = Math.abs(el.vx); }
+      if (el.v > 0.94) { el.v = 0.94; el.vy = -Math.abs(el.vy); }
+      if (el.v < 0.06) { el.v = 0.06; el.vy = Math.abs(el.vy); }
+    }
+  }
+
+  function drawMetal(ctx, w, h) {
+    ctx.clearRect(0, 0, w, h);
+    var box = metalBox(w, h, state.shear);
+    var poly = polyOf(box);
+    tracePoly(ctx, poly);
+    ctx.fillStyle = "#F4F7FB";
+    ctx.fill();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = "#9AABBA";
+    ctx.stroke();
+
+    var spacing = (box.right - box.left) / COLS;
+    var radius = Math.max(9, Math.min(spacing, (box.bottom - box.top) / ROWS) * 0.3);
+    var r, c, idx, u, v, pos, wob, x, y;
+    idx = 0;
+    for (r = 0; r < ROWS; r++) {
+      for (c = 0; c < COLS; c++) {
+        u = (c + 0.5) / COLS;
+        v = (r + 0.5) / ROWS;
+        pos = uvToXy(u, v, box);
+        wob = wobble(phases[idx], true);
+        x = pos.x + wob.x;
+        y = pos.y + wob.y;
+        sphere(ctx, x, y, radius, "#F7F8F9", "#C5CED6", "#6E7C89");
+        glyph(ctx, x, y, "+", Math.max(12, radius * 0.95), "#1E293B");
+        if (state.reduce && state.heat && idx % 5 === 0) {
+          doubleArrow(ctx, x, y - radius - 8, 7, "#1F5C8B");
+        }
+        idx++;
+      }
+    }
+
+    for (var k = 0; k < electrons.length; k++) {
+      var el = electrons[k];
+      pos = uvToXy(el.u, el.v, box);
+      ctx.beginPath();
+      ctx.arc(pos.x, pos.y, 3.3, 0, Math.PI * 2);
+      ctx.fillStyle = "#6D4AA8";
+      ctx.fill();
+      if (state.reduce) {
+        var len = 16;
+        var dx = state.pila ? 1 : el.vx;
+        var dy = state.pila ? 0 : el.vy;
+        var mag = Math.hypot(dx, dy) || 1;
+        arrow(ctx, pos.x, pos.y, pos.x + (dx / mag) * len, pos.y + (dy / mag) * len, "#6D4AA8");
+      }
+    }
+
+    if (state.reduce && state.shear > 0.2) {
+      var topRow = uvToXy(0.15, 0.12, box);
+      var topEnd = uvToXy(0.72, 0.12, box);
+      arrow(ctx, topRow.x, topRow.y - radius - 6, topEnd.x, topEnd.y - radius - 6, "#1F5C8B");
+    }
+    if (state.pila) {
+      ctx.fillStyle = "#1F5C8B";
+      ctx.font = "700 18px Arial";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("−", Math.max(12, box.left * 0.45), h / 2);
+      ctx.fillText("+", Math.min(w - 12, box.right + (w - box.right) * 0.55), h / 2);
+    }
+  }
+
+  function saltIonPos(c, r, w, h) {
+    var sx = Math.min(w, h) * 0.155;
+    var sy = sx;
+    var gridW = (SCOLS - 1) * sx;
+    var gridH = (SROWS - 1) * sy;
+    var open = state.crack;
+    var originX = (w - gridW) / 2;
+    var originY = (h - gridH) / 2 - sy * 0.28;
+    var x = originX + c * sx;
+    var y = originY + r * sy;
+    if (c >= 3) {
+      x += open * sx * 0.95;
+      y += open * sy;
+    } else {
+      x -= open * sx * 0.28;
+    }
+    return { x: x, y: y, sx: sx };
+  }
+
+  function drawSalt(ctx, w, h) {
+    ctx.clearRect(0, 0, w, h);
+    var ions = [];
+    var r, c, idx, pos, wob, plus, radius;
+    idx = 0;
+    for (r = 0; r < SROWS; r++) {
+      for (c = 0; c < SCOLS; c++) {
+        pos = saltIonPos(c, r, w, h);
+        wob = wobble(saltPhases[idx], true);
+        plus = (c + r) % 2 === 0;
+        radius = Math.max(8, pos.sx * 0.34);
+        ions.push({
+          x: pos.x + wob.x,
+          y: pos.y + wob.y,
+          plus: plus,
+          c: c,
+          r: r,
+          radius: radius
+        });
+        idx++;
+      }
+    }
+
+    if (state.crack > 0.35) {
+      var leftEdge = null;
+      var rightEdge = null;
+      for (idx = 0; idx < ions.length; idx++) {
+        if (ions[idx].c === 2) leftEdge = ions[idx];
+        if (ions[idx].c === 3 && rightEdge === null) rightEdge = ions[idx];
+      }
+      if (leftEdge && rightEdge) {
+        var gx = (leftEdge.x + rightEdge.x) / 2;
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(gx, 16);
+        var yy = 16;
+        var dir = 1;
+        while (yy < h - 12) {
+          yy += 12;
+          ctx.lineTo(gx + dir * 5, yy);
+          dir *= -1;
+        }
+        ctx.strokeStyle = "#C0392B";
+        ctx.lineWidth = 2;
+        ctx.setLineDash([4, 3]);
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+
+    for (idx = 0; idx < ions.length; idx++) {
+      var ion = ions[idx];
+      if (ion.plus) sphere(ctx, ion.x, ion.y, ion.radius, "#F7F8F9", "#C5CED6", "#6E7C89");
+      else sphere(ctx, ion.x, ion.y, ion.radius, "#F8D7B0", "#E07A1F", "#B85E12");
+      glyph(ctx, ion.x, ion.y, ion.plus ? "+" : "−", Math.max(11, ion.radius * 0.9), ion.plus ? "#1E293B" : "#FFFFFF");
+    }
+
+    if (state.crack > 0.45) {
+      for (r = 0; r < SROWS - 1; r++) {
+        var a = null;
+        var b = null;
+        for (idx = 0; idx < ions.length; idx++) {
+          if (ions[idx].c === 2 && ions[idx].r === r + 1) a = ions[idx];
+          if (ions[idx].c === 3 && ions[idx].r === r) b = ions[idx];
+        }
+        if (!a || !b) continue;
+        var mx = (a.x + b.x) / 2;
+        var my = (a.y + b.y) / 2;
+        arrow(ctx, mx, my, a.x + (a.x - mx) * 0.35, a.y, "#C0392B");
+        arrow(ctx, mx, my, b.x + (b.x - mx) * 0.35, b.y, "#C0392B");
+      }
+      ctx.fillStyle = "#1E293B";
+      ctx.font = "700 13px Arial";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "bottom";
+      ctx.fillText("se repelen", w * 0.62, 18);
+    }
+  }
+
+  function texts() {
+    var g = state.hammered || state.shear > 0.04;
+    var p = state.pila;
+    var c = state.heat;
+    if (g && p && c) {
+      return {
+        macro: "Metal doblado, foquito encendido. Sal partida, foquito apagado.",
+        sub: "Capas deslizadas y e− hacia el +. La sal no tiene ese mar de electrones.",
+        sim: "Cu(s) sigue neutro y conduce. NaCl(s) partido no."
+      };
+    }
+    if (g && p) {
+      return {
+        macro: "El metal doblado enciende el foquito. La sal partida sigue apagada.",
+        sub: "Las capas deslizaron y los e− derivan al +. La grieta no suelta electrones.",
+        sim: "Cu(s) deformado sigue siendo Cu(s). NaCl(s) sólido no conduce."
+      };
+    }
+    if (g && c) {
+      return {
+        macro: "El metal queda doblado y entero. La sal queda partida.",
+        sub: "Las capas deslizaron en el mar de e−. El calor solo agita en el lugar.",
+        sim: "Cu(s) y NaCl(s): ni el golpe ni el calor crean moléculas."
+      };
+    }
+    if (p && c) {
+      return {
+        macro: "El foquito del metal sigue encendido. El de la sal, no.",
+        sub: "Hay deriva hacia el + y más vibración. En la sal no pasa nada de eso.",
+        sim: "Cu(s) conduce. NaCl(s) no. El calor no cambia esa escritura."
+      };
+    }
+    if (g) {
+      return {
+        macro: "El metal se dobla y queda de una pieza. La sal se parte.",
+        sub: "Capas de cationes deslizan en un mar de e−. En la sal se enfrentan cargas iguales.",
+        sim: "Sigue siendo Cu(s). La sal partida sigue siendo NaCl(s), no moléculas."
+      };
+    }
+    if (p) {
+      return {
+        macro: "El foquito del metal enciende. El de la sal sigue apagado.",
+        sub: "Esos e− ya estaban: ahora derivan hacia el +. En la sal no hay portador móvil.",
+        sim: "Cu(s) conduce en sólido. NaCl(s) no. No aparece una carga de más."
+      };
+    }
+    if (c) {
+      return {
+        macro: "Por fuera casi no cambia: en este ensayo no se funden.",
+        sub: "Los cationes vibran más, pero en su lugar. El calor no fabrica electrones libres.",
+        sim: "Siguen Cu(s) y NaCl(s). Calentar no es lo mismo que conectar la pila."
+      };
+    }
+    return {
+      macro: "Los dos se ven enteros y los dos foquitos están apagados.",
+      sub: "En el metal los puntitos ya recorren todo el volumen. La sal no tiene puntitos.",
+      sim: "Cu(s) y NaCl(s). El metal es neutro: enchufar no crea electrones."
+    };
+  }
+
+  function syncUI() {
+    var t = texts();
+    msgMacro.textContent = t.macro;
+    msgSub.textContent = t.sub;
+    msgSim.textContent = t.sim;
+    cardMetal.dataset.golpe = state.hammered || state.shear > 0.04 ? "1" : "0";
+    cardMetal.dataset.pila = state.pila ? "1" : "0";
+    cardMetal.dataset.calor = state.heat ? "1" : "0";
+    cardSalt.dataset.golpe = state.hammered || state.crack > 0.04 ? "1" : "0";
+    cardSalt.dataset.pila = "0";
+    cardSalt.dataset.calor = state.heat ? "1" : "0";
+    lampMetal.textContent = state.pila ? "Foquito encendido" : "Foquito apagado";
+    lampMetal.classList.toggle("on", state.pila);
+    lampSalt.textContent = state.pila ? "Sigue apagado" : "Foquito apagado";
+    lampSalt.classList.remove("on");
+    hintMetal.textContent = state.pila
+      ? "Los mismos puntitos derivan hacia el borde +. No aparecieron ahora."
+      : "Los puntitos ya se mueven con la pila desconectada.";
+    hintSalt.textContent = state.hammered
+      ? "Cargas iguales enfrentadas: el cristal se abre. Siguen sin puntitos."
+      : "Acá no hay puntitos: los iones están fijos.";
+    btnPila.textContent = state.pila ? "Desconectar pila" : "Conectar pila";
+    btnPila.setAttribute("aria-pressed", state.pila ? "true" : "false");
+    btnCalor.textContent = state.heat ? "Dejar de calentar" : "Calentar";
+    btnCalor.setAttribute("aria-pressed", state.heat ? "true" : "false");
+    btnPausa.textContent = state.paused ? "Seguir" : "Pausa";
+    btnPausa.setAttribute("aria-pressed", state.paused ? "true" : "false");
+    pausaNota.hidden = !state.paused;
+    btnGolpe.disabled = state.hammered;
+    btnGolpe.textContent = state.hammered ? "Ya golpeado" : "Martillazo";
+    descMetal.textContent = state.pila
+      ? "Metal con pila: los electrones derivan hacia el borde positivo, dentro del sólido. El foquito está encendido."
+      : "Metal: esferas con más y puntitos que recorren todo el volumen. No hay órbitas ni electrones nuevos.";
+    descSalt.textContent = state.hammered
+      ? "Sal partida: iones de igual signo enfrentados en la grieta. No hay puntitos móviles. El foquito sigue apagado."
+      : "Sal sólida: red alternada de iones positivos y negativos, sin puntitos. El foquito está apagado.";
+    cvMetal.setAttribute("aria-label", descMetal.textContent);
+    cvSalt.setAttribute("aria-label", descSalt.textContent);
+  }
+
+  function onGolpe() {
+    if (state.hammered) return;
+    state.hammered = true;
+    if (state.paused || state.reduce) {
+      state.shear = 1;
+      state.crack = 1;
+      state.hammering = false;
+    } else {
+      state.hammering = true;
+      state.hammerT = 0;
+    }
+    syncUI();
+  }
+
+  function onPila() {
+    state.pila = !state.pila;
+    syncUI();
+  }
+
+  function onCalor() {
+    state.heat = !state.heat;
+    syncUI();
+  }
+
+  function onPausa() {
+    state.paused = !state.paused;
+    syncUI();
+  }
+
+  function onReset() {
+    state.pila = false;
+    state.heat = false;
+    state.paused = false;
+    state.hammered = false;
+    state.hammering = false;
+    state.hammerT = 0;
+    state.shear = 0;
+    state.crack = 0;
+    state.time = 0;
+    seedElectrons();
+    syncUI();
+    btnGolpe.focus();
+  }
+
+  function openGuia() {
+    lastFocus = document.activeElement;
+    guia.hidden = false;
+    document.body.style.overflow = "hidden";
+    btnCerrar.focus();
+  }
+
+  function closeGuia() {
+    guia.hidden = true;
+    document.body.style.overflow = "";
+    if (lastFocus && lastFocus.focus) lastFocus.focus();
+    else btnGuia.focus();
+  }
+
+  function contrastar() {
+    var chosen = document.querySelector("input[name=pred]:checked");
+    var map = {
+      metal: "El metal no se parte: si los cationes se corren, los electrones deslocalizados siguen uniendo el sólido.",
+      sal: "La sal se parte: al deslizar, quedan cargas del mismo signo enfrentadas y se repelen. No hay un mar de electrones que la sostenga.",
+      ambos: "No se parten los dos. La sal se raja por esa repulsión. El metal se dobla y queda entero.",
+      ninguno: "La sal sí se rompe. Sin electrones deslocalizados, enfrentar iones iguales abre la grieta."
+    };
+    fbPred.hidden = false;
+    fbPred.textContent = chosen
+      ? map[chosen.value]
+      : "Elegí una opción. La idea es predecir antes de mirar cómo se abre la sal y cómo se dobla el metal.";
+  }
+
+  function trap(e) {
+    if (guia.hidden) return;
+    if (e.key === "Escape") {
+      e.preventDefault();
+      closeGuia();
+      return;
+    }
+    if (e.key !== "Tab") return;
+    var nodes = guia.querySelectorAll("button, textarea, input, summary");
+    var list = [];
+    for (var n = 0; n < nodes.length; n++) {
+      if (!nodes[n].disabled) list.push(nodes[n]);
+    }
+    if (!list.length) return;
+    var first = list[0];
+    var last = list[list.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  }
+
+  btnGolpe.addEventListener("click", onGolpe);
+  btnPila.addEventListener("click", onPila);
+  btnCalor.addEventListener("click", onCalor);
+  btnPausa.addEventListener("click", onPausa);
+  btnReset.addEventListener("click", onReset);
+  btnGuia.addEventListener("click", openGuia);
+  btnCerrar.addEventListener("click", closeGuia);
+  btnImprimir.addEventListener("click", function () { window.print(); });
+  btnContrastar.addEventListener("click", contrastar);
+  document.addEventListener("keydown", trap);
+  guia.addEventListener("click", function (e) {
+    if (e.target === guia) closeGuia();
+  });
+
+  seedElectrons();
+  syncUI();
+
+  function frame(ts) {
+    requestAnimationFrame(frame);
+    var dt = Math.min(0.033, lastTs ? (ts - lastTs) / 1000 : 0.016);
+    lastTs = ts;
+    if (!state.paused && !state.reduce) step(dt);
+    var m = fit(cvMetal);
+    var s = fit(cvSalt);
+    drawMetal(m.ctx, m.w, m.h);
+    drawSalt(s.ctx, s.w, s.h);
+  }
+  requestAnimationFrame(frame);
+  window.__SIM_READY = true;
+})();
+</script>
+</body>
+</html>
+<!--
+Datos usados y de dónde salen.
+
+La animación no toma velocidades, radios ni temperaturas del libro: esos números serían inventados.
+La pantalla no muestra valores numéricos. El modelo es cualitativo.
+
+Respaldo localizado en los materiales de la unidad, Chang y Goldsby, Química, 12.ª ed.
+(el dataset de clase se nombra valores-chang.json; ese archivo no está en este workspace,
+así que no se copió ninguna cifra a la interfaz):
+
+- Conductividad cualitativa, sin tabla de siemens ni de puntos de fusión:
+  el metal sólido conduce; NaCl sólido no; NaCl disuelto o fundido sí,
+  porque se mueven los iones y no porque aparezcan electrones.
+  Clases c05, c08 y c11, con fuente en pp. 381-382 del mismo libro para EN y carácter iónico,
+  y la observación de lamparita descripta en c05/c08 (no hay cifra de conductividad adjunta).
+- Figura 9.5, p. 381: EN de Na 0,9; K 0,8; Li 1,0; Cl 3,0. Sirve de fondo:
+  los metales alcalinos tienen EN baja, coherente con valencia poco retenida por un solo átomo.
+  No hay EN de Cu en esas filas: no se inventó y no se muestra.
+- Tabla 8.2, p. 342: energía de ionización de Na 495,9 kJ/mol y de Cl 1251 kJ/mol.
+  No entra en el simulador.
+- Figura 9.7, p. 382: NaCl con diferencia de electronegatividad 2,1 y carácter iónico 73 %.
+  El texto del libro dice que el enlace iónico se forma cuando esa diferencia es de 2,0 o más,
+  para la mayoría de los casos pero no para todos (excepción de la misma figura: CsF 3,3 y 70 %,
+  menor que LiF 88 %). Si hubiera que nombrar una referencia, es esa: aproximadamente 2,0
+  como regla práctica, con excepciones. La lectura es continua. Este archivo no usa otro corte.
+- Escritura de la pantalla: Cu(s) para el metal elemental y NaCl(s) para la red.
+  No se asignó carga numérica al catión de cobre porque no está en los datos localizados.
+- Lo que el simulador afirma sin número: los electrones de valencia del metal ya están
+  deslocalizados en el sólido neutro; la pila solo les da una deriva; el martillazo desliza
+  capas sin romper el mar de electrones; en la sal sólida no hay ese mar y el deslizamiento
+  enfrenta cargas iguales.
+-->

@@ -1,1 +1,2032 @@
-$file:/workspace/simuladores-uniones/simuladores/sim-c09-geometria-trepev/index.html
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Armá la Geometría - Simulador TRePEV</title>
+    <meta
+      name="description"
+      content="Simulador interactivo 3D de geometría molecular y teoría TRePEV para química de secundaria."
+    />
+    <meta property="og:title" content="Armá la Geometría - Simulador TRePEV" />
+    <meta
+      property="og:description"
+      content="Simulador interactivo 3D de geometría molecular y teoría TRePEV para química de secundaria."
+    />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <style>
+      /* --- Variables y Estilos Base --- */
+      :root {
+        --color-bg: #ffffff;
+        --color-title: #1f5c8b;
+        --color-text: #1e293b;
+        --color-accent: #e07a1f;
+        --color-success: #2e8b57;
+        --color-error: #c0392b;
+        --color-panel: #eef4f9;
+        --color-border: #d8e2ec;
+        --color-submicro: #6d4aa8;
+        --color-callout: #fff4ea;
+        --color-focus: #2563eb;
+        --radius-sm: 8px;
+        --radius-md: 14px;
+        --radius-lg: 18px;
+        --font-main: Arial, Helvetica, sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: var(--font-main);
+        background-color: var(--color-bg);
+        color: var(--color-text);
+        line-height: 1.5;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      /* Barra azul superior de 6px */
+      .top-banner {
+        height: 6px;
+        background-color: var(--color-title);
+        width: 100%;
+      }
+
+      /* Contenedor principal con mucho aire */
+      .app-container {
+        max-width: 1240px;
+        width: 100%;
+        margin: 0 auto;
+        padding: 20px 24px 40px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      /* Encabezado */
+      header {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .header-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+
+      .versalita-tag {
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--color-accent);
+      }
+
+      h1 {
+        color: var(--color-title);
+        font-size: 1.9rem;
+        font-weight: 700;
+        line-height: 1.2;
+      }
+
+      .consigna {
+        color: var(--color-text);
+        font-size: 1.05rem;
+        margin-top: 2px;
+      }
+
+      .header-actions {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+
+      /* Botones generales (mínimo 44px para accesibilidad táctil) */
+      button,
+      .btn {
+        font-family: var(--font-main);
+        font-size: 0.95rem;
+        font-weight: 600;
+        border-radius: var(--radius-md);
+        padding: 10px 18px;
+        min-height: 44px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: all 0.18s ease;
+        border: 2px solid transparent;
+        touch-action: manipulation;
+        user-select: none;
+      }
+
+      button:focus-visible,
+      input:focus-visible {
+        outline: 3px solid var(--color-focus);
+        outline-offset: 2px;
+      }
+
+      /* Botón principal azul lleno */
+      .btn-primary {
+        background-color: var(--color-title);
+        color: #ffffff;
+      }
+
+      .btn-primary:hover:not(:disabled) {
+        background-color: #174569;
+        transform: translateY(-1px);
+      }
+
+      /* Botón secundario con borde */
+      .btn-secondary {
+        background-color: #ffffff;
+        color: var(--color-title);
+        border: 2px solid var(--color-border);
+      }
+
+      .btn-secondary:hover:not(:disabled) {
+        border-color: var(--color-title);
+        background-color: var(--color-panel);
+      }
+
+      .btn-accent {
+        background-color: var(--color-accent);
+        color: #ffffff;
+      }
+
+      .btn-accent:hover:not(:disabled) {
+        background-color: #c96813;
+      }
+
+      .btn-outline-accent {
+        background-color: #ffffff;
+        color: var(--color-accent);
+        border: 2px solid var(--color-accent);
+      }
+
+      .btn-outline-accent:hover:not(:disabled) {
+        background-color: #fff8f0;
+      }
+
+      .btn-sm {
+        min-height: 38px;
+        padding: 6px 12px;
+        font-size: 0.88rem;
+      }
+
+      button:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+        transform: none !important;
+      }
+
+      /* Grid principal: simulador y controles */
+      .main-grid {
+        display: grid;
+        grid-template-columns: 1.15fr 0.85fr;
+        gap: 24px;
+        align-items: stretch;
+      }
+
+      @media (max-width: 960px) {
+        .main-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* Zona de simulación (Izquierda / Arriba) */
+      .sim-panel {
+        background-color: var(--color-panel);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-lg);
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        overflow: hidden;
+        min-height: 480px;
+        box-shadow: 0 4px 14px rgba(31, 92, 139, 0.04);
+      }
+
+      .canvas-wrapper {
+        flex: 1;
+        position: relative;
+        width: 100%;
+        min-height: 380px;
+        cursor: grab;
+      }
+
+      .canvas-wrapper:active {
+        cursor: grabbing;
+      }
+
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+
+      /* Controles flotantes sobre el simulador */
+      .sim-overlay-top {
+        position: absolute;
+        top: 14px;
+        left: 14px;
+        right: 14px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+        pointer-events: none;
+      }
+
+      .sim-overlay-top > * {
+        pointer-events: auto;
+      }
+
+      .sim-badge-info {
+        background: rgba(255, 255, 255, 0.92);
+        backdrop-filter: blur(4px);
+        padding: 6px 14px;
+        border-radius: 20px;
+        border: 1px solid var(--color-border);
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: var(--color-title);
+      }
+
+      .sim-tools {
+        display: flex;
+        gap: 8px;
+      }
+
+      .sim-tool-btn {
+        background: rgba(255, 255, 255, 0.92);
+        backdrop-filter: blur(4px);
+        color: var(--color-text);
+        border: 1px solid var(--color-border);
+        padding: 6px 12px;
+        min-height: 36px;
+        font-size: 0.82rem;
+        border-radius: 18px;
+      }
+
+      .sim-tool-btn:hover {
+        background: #ffffff;
+        border-color: var(--color-title);
+      }
+
+      .sim-tool-btn.active {
+        background: var(--color-accent);
+        color: #ffffff;
+        border-color: var(--color-accent);
+      }
+
+      .sim-hint {
+        position: absolute;
+        bottom: 12px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(4px);
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 0.78rem;
+        color: #64748b;
+        pointer-events: none;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      /* Leyenda de esferas y lóbulos */
+      .sim-legend {
+        background: #ffffff;
+        border-top: 1px solid var(--color-border);
+        padding: 10px 16px;
+        display: flex;
+        justify-content: space-around;
+        flex-wrap: wrap;
+        gap: 12px;
+        font-size: 0.84rem;
+      }
+
+      .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .dot-central {
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: radial-gradient(circle at 35% 35%, #4a90e2, #1f5c8b);
+      }
+
+      .dot-enlazante {
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: radial-gradient(circle at 35% 35%, #e2e8f0, #94a3b8);
+        border: 1px solid #cbd5e1;
+      }
+
+      .dot-libre {
+        width: 18px;
+        height: 12px;
+        border-radius: 50% 50% 40% 40%;
+        background: rgba(224, 122, 31, 0.55);
+        border: 1.5px dashed var(--color-accent);
+      }
+
+      /* Panel de controles (Derecha / Abajo) */
+      .controls-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .card {
+        background: #ffffff;
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-lg);
+        padding: 18px 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+      }
+
+      .card-title {
+        font-size: 0.98rem;
+        font-weight: 700;
+        color: var(--color-title);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      /* Fila de presets */
+      .presets-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 8px;
+      }
+
+      .preset-btn {
+        flex-direction: column;
+        padding: 8px 4px;
+        min-height: 56px;
+        border-radius: var(--radius-md);
+        font-size: 0.88rem;
+        border: 2px solid var(--color-border);
+        background: #ffffff;
+        color: var(--color-text);
+      }
+
+      .preset-btn strong {
+        font-size: 1.05rem;
+        color: var(--color-title);
+      }
+
+      .preset-btn span {
+        font-size: 0.68rem;
+        color: #64748b;
+        font-weight: normal;
+      }
+
+      .preset-btn:hover {
+        border-color: var(--color-title);
+        background: var(--color-panel);
+      }
+
+      .preset-btn.active {
+        border-color: var(--color-title);
+        background: #e1eef8;
+      }
+
+      .preset-btn.active strong {
+        color: #174569;
+      }
+
+      /* Control interactivo de dominios */
+      .domain-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 8px 0;
+        border-bottom: 1px solid #f1f5f9;
+      }
+
+      .domain-row:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+      }
+
+      .domain-label {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .domain-name {
+        font-size: 0.92rem;
+        font-weight: 600;
+      }
+
+      .domain-desc {
+        font-size: 0.78rem;
+        color: #64748b;
+      }
+
+      .domain-controls {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .count-badge {
+        min-width: 32px;
+        text-align: center;
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: var(--color-title);
+      }
+
+      .btn-icon {
+        width: 44px;
+        height: 44px;
+        padding: 0;
+        border-radius: 50%;
+        font-size: 1.25rem;
+      }
+
+      /* Rótulos clave: Disposición de los pares vs Forma de la molécula */
+      .geometry-results {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        background: var(--color-panel);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-md);
+        padding: 14px 16px;
+      }
+
+      .geo-box {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .geo-title {
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: #64748b;
+        letter-spacing: 0.04em;
+      }
+
+      .geo-value {
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: var(--color-title);
+      }
+
+      .angle-row {
+        grid-column: 1 / -1;
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        padding-top: 8px;
+        border-top: 1px dashed var(--color-border);
+      }
+
+      .angle-value {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: var(--color-accent);
+      }
+
+      /* Panel "Qué estás viendo" */
+      .seeing-panel {
+        background-color: var(--color-callout);
+        border: 1px solid #ffd8b3;
+        border-radius: var(--radius-lg);
+        padding: 16px 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .seeing-header {
+        font-size: 0.88rem;
+        font-weight: 700;
+        color: var(--color-accent);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .seeing-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        font-size: 0.9rem;
+        line-height: 1.4;
+      }
+
+      .pill {
+        padding: 2px 8px;
+        border-radius: 6px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        flex-shrink: 0;
+        margin-top: 1px;
+      }
+
+      .pill-macro {
+        background-color: #e8f5e9;
+        color: var(--color-success);
+        border: 1px solid #c8e6c9;
+      }
+
+      .pill-submicro {
+        background-color: #f3e8ff;
+        color: var(--color-submicro);
+        border: 1px solid #e9d5ff;
+      }
+
+      .pill-simbolico {
+        background-color: #fff0e0;
+        color: var(--color-accent);
+        border: 1px solid #ffd8b3;
+      }
+
+      .seeing-text {
+        color: var(--color-text);
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+
+      /* Modal de Guía de Trabajo */
+      .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+        z-index: 999;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s ease;
+      }
+
+      .modal-backdrop.open {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      .modal-content {
+        background: #ffffff;
+        border-radius: var(--radius-lg);
+        max-width: 680px;
+        width: 100%;
+        max-height: 90vh;
+        overflow-y: auto;
+        padding: 28px 32px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        border-bottom: 2px solid var(--color-panel);
+        padding-bottom: 12px;
+      }
+
+      .modal-header h2 {
+        color: var(--color-title);
+        font-size: 1.4rem;
+      }
+
+      .guide-questions {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+      }
+
+      .guide-q {
+        background: var(--color-panel);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-md);
+        padding: 14px 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .guide-q-tag {
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: var(--color-title);
+      }
+
+      .guide-q p {
+        font-size: 0.95rem;
+        line-height: 1.45;
+      }
+
+      .guide-q-answer {
+        min-height: 52px;
+        border: 1px dashed var(--color-border);
+        background: #ffffff;
+        border-radius: var(--radius-sm);
+        padding: 8px;
+        font-size: 0.85rem;
+        color: #94a3b8;
+        font-style: italic;
+      }
+
+      .modal-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        border-top: 1px solid var(--color-border);
+        padding-top: 16px;
+      }
+
+      /* Accesibilidad: Respeto a prefers-reduced-motion */
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+
+      /* Formato para impresión (Guía de trabajo en hoja blanca) */
+      @media print {
+        body {
+          background: #ffffff !important;
+          color: #000000 !important;
+        }
+
+        .top-banner,
+        header,
+        .main-grid,
+        .modal-footer,
+        .close-btn-x {
+          display: none !important;
+        }
+
+        .modal-backdrop {
+          position: static !important;
+          background: none !important;
+          padding: 0 !important;
+          opacity: 1 !important;
+          pointer-events: auto !important;
+        }
+
+        .modal-content {
+          box-shadow: none !important;
+          max-width: 100% !important;
+          max-height: none !important;
+          padding: 0 !important;
+        }
+
+        .modal-header {
+          border-bottom: 2px solid #000000 !important;
+        }
+
+        .guide-q {
+          background: #ffffff !important;
+          border: 1px solid #cccccc !important;
+          page-break-inside: avoid;
+        }
+
+        .guide-q-answer {
+          min-height: 90px !important;
+          border: 1px solid #cccccc !important;
+        }
+
+        .print-student-header {
+          display: block !important;
+          margin-bottom: 20px;
+          border-bottom: 1px dashed #666;
+          padding-bottom: 10px;
+        }
+      }
+
+      .print-student-header {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Barra azul de 6px arriba -->
+    <div class="top-banner" aria-hidden="true"></div>
+
+    <div class="app-container">
+      <!-- 1. Encabezado -->
+      <header>
+        <div class="header-top">
+          <div>
+            <div class="versalita-tag">QUÍMICA 5.º · UNIONES QUÍMICAS · CLASE 09</div>
+            <h1>Armá la geometría</h1>
+          </div>
+          <div class="header-actions">
+            <button
+              id="btn-guia"
+              class="btn btn-secondary"
+              aria-label="Abrir guía de trabajo para estudiantes"
+            >
+              📖 Guía de trabajo
+            </button>
+            <button
+              id="btn-reset"
+              class="btn btn-secondary"
+              aria-label="Reiniciar simulador a estado inicial"
+            >
+              🔄 Reiniciar
+            </button>
+          </div>
+        </div>
+        <p class="consigna">
+          Arrastrá con el dedo o mouse para girar la molécula en 3D y probá cómo los pares libres
+          empujan a los enlaces vecinos.
+        </p>
+      </header>
+
+      <!-- Grid Principal: Zona de simulación a la izquierda y Controles a la derecha -->
+      <main class="main-grid">
+        <!-- 2. Zona de simulación (canvas 3D hecho a mano) -->
+        <section class="sim-panel" aria-label="Visualizador 3D interactivo de la molécula">
+          <div class="sim-overlay-top">
+            <div class="sim-badge-info" id="vsepr-formula-badge" aria-live="polite">
+              Tipo: AB₄
+            </div>
+            <div class="sim-tools">
+              <button
+                id="btn-toggle-lone"
+                class="sim-tool-btn"
+                aria-pressed="false"
+                title="Alterná para ver únicamente la forma geométrica de los átomos"
+              >
+                👁️ Ocultar pares libres
+              </button>
+              <button
+                id="btn-center"
+                class="sim-tool-btn"
+                title="Volver a la orientación inicial de cámara"
+              >
+                🎯 Centrar
+              </button>
+            </div>
+          </div>
+
+          <div class="canvas-wrapper" id="canvas-container">
+            <canvas
+              id="mol-canvas"
+              tabindex="0"
+              role="img"
+              aria-label="Representación 3D del átomo central y sus dominios electrónicos enlazantes y libres"
+            ></canvas>
+            <div class="sim-hint" aria-hidden="true">
+              <span>🖐️ Arrastrá para girar en 3D</span>
+            </div>
+          </div>
+
+          <!-- Leyenda visual de las esferas y lóbulos -->
+          <div class="sim-legend">
+            <div class="legend-item">
+              <div class="dot-central"></div>
+              <span>Átomo central</span>
+            </div>
+            <div class="legend-item">
+              <div class="dot-enlazante"></div>
+              <span>Par enlazante (átomo unido)</span>
+            </div>
+            <div class="legend-item">
+              <div class="dot-libre"></div>
+              <span>Par libre (lóbulo más ancho)</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- 3. Panel de controles y 4. Qué estás viendo -->
+        <section class="controls-panel">
+          <!-- Presets rápidos -->
+          <div class="card">
+            <div class="card-title">
+              <span>Moléculas de referencia (Chang 12.ª ed.)</span>
+            </div>
+            <div class="presets-grid" role="group" aria-label="Seleccionar molécula de referencia">
+              <button class="btn preset-btn" data-preset="CO2">
+                <strong>CO₂</strong>
+                <span>2 enl. / 0 lib.</span>
+              </button>
+              <button class="btn preset-btn" data-preset="BF3">
+                <strong>BF₃</strong>
+                <span>3 enl. / 0 lib.</span>
+              </button>
+              <button class="btn preset-btn active" data-preset="CH4">
+                <strong>CH₄</strong>
+                <span>4 enl. / 0 lib.</span>
+              </button>
+              <button class="btn preset-btn" data-preset="NH3">
+                <strong>NH₃</strong>
+                <span>3 enl. / 1 lib.</span>
+              </button>
+              <button class="btn preset-btn" data-preset="H2O">
+                <strong>H₂O</strong>
+                <span>2 enl. / 2 lib.</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Modificar dominios -->
+          <div class="card">
+            <div class="card-title">
+              <span>Dominios alrededor del átomo central</span>
+              <span id="total-domains-badge" style="font-size: 0.85rem; color: #64748b"
+                >Total: 4 dominios</span
+              >
+            </div>
+
+            <!-- Fila Enlazantes -->
+            <div class="domain-row">
+              <div class="domain-label">
+                <span class="domain-name">Pares enlazantes</span>
+                <span class="domain-desc">Terminan en un átomo periférico</span>
+              </div>
+              <div class="domain-controls">
+                <button
+                  id="btn-sub-bonding"
+                  class="btn btn-secondary btn-icon"
+                  aria-label="Quitar un par enlazante"
+                >
+                  −
+                </button>
+                <span id="count-bonding" class="count-badge" aria-live="polite">4</span>
+                <button
+                  id="btn-add-bonding"
+                  class="btn btn-primary btn-icon"
+                  aria-label="Agregar un par enlazante"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+
+            <!-- Fila Libres -->
+            <div class="domain-row">
+              <div class="domain-label">
+                <span class="domain-name">Pares libres</span>
+                <span class="domain-desc">Lóbulos voluminosos (más repulsión)</span>
+              </div>
+              <div class="domain-controls">
+                <button
+                  id="btn-sub-lone"
+                  class="btn btn-secondary btn-icon"
+                  aria-label="Quitar un par libre"
+                >
+                  −
+                </button>
+                <span id="count-lone" class="count-badge" aria-live="polite">0</span>
+                <button
+                  id="btn-add-lone"
+                  class="btn btn-outline-accent btn-icon"
+                  aria-label="Agregar un par libre"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Dos rótulos obligatorios: Disposición de los pares y Forma de la molécula -->
+          <div class="geometry-results">
+            <div class="geo-box">
+              <span class="geo-title">Disposición de los pares</span>
+              <span class="geo-value" id="val-electron-geo">Tetraédrica</span>
+            </div>
+            <div class="geo-box">
+              <span class="geo-title">Forma de la molécula</span>
+              <span class="geo-value" id="val-molecular-geo">Tetraédrica</span>
+            </div>
+            <div class="angle-row">
+              <span class="geo-title">Ángulo de enlace</span>
+              <span class="angle-value" id="val-angle">109,5°</span>
+            </div>
+          </div>
+
+          <!-- 4. Panel "Qué estás viendo" (fondo #FFF4EA) -->
+          <div class="seeing-panel" aria-live="polite">
+            <div class="seeing-header">💡 Qué estás viendo</div>
+
+            <div class="seeing-item">
+              <span class="pill pill-macro">Macro</span>
+              <span class="seeing-text" id="see-macro">
+                Gas inflamable presente en el gas natural y en la descomposición orgánica.
+              </span>
+            </div>
+
+            <div class="seeing-item">
+              <span class="pill pill-submicro">Submicro</span>
+              <span class="seeing-text" id="see-submicro">
+                4 dominios enlazantes se repelen equitativamente hacia los vértices de un tetraedro.
+              </span>
+            </div>
+
+            <div class="seeing-item">
+              <span class="pill pill-simbolico">Simbólico</span>
+              <span class="seeing-text" id="see-simbolico">
+                CH₄ · Tipo AB₄ · Disposición y forma coinciden en tetraédrica con 109,5°.
+              </span>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <!-- 5. Modal de Guía de Trabajo (con CSS @media print para impresión de aula) -->
+    <div
+      class="modal-backdrop"
+      id="guide-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="guide-title"
+    >
+      <div class="modal-content">
+        <div class="modal-header">
+          <div>
+            <div class="versalita-tag">GUÍA DE INDAGACIÓN Y REGISTRO</div>
+            <h2 id="guide-title">Geometría Molecular y TRePEV</h2>
+          </div>
+          <button
+            id="btn-close-modal"
+            class="btn btn-secondary btn-sm close-btn-x"
+            aria-label="Cerrar ventana de guía"
+          >
+            ✕ Cerrar
+          </button>
+        </div>
+
+        <div class="print-student-header">
+          <p><strong>Estudiante:</strong> _________________________________________ <strong>Curso:</strong> 5.° año</p>
+          <p><strong>Fecha:</strong> ____ / ____ / 2026</p>
+        </div>
+
+        <div class="guide-questions">
+          <!-- 1. Pregunta de predicción ANTES de tocar -->
+          <div class="guide-q">
+            <span class="guide-q-tag">1. Predicción (Respondé ANTES de usar el simulador)</span>
+            <p>
+              El agua (H₂O) tiene 4 dominios electrónicos totales alrededor del oxígeno (2 pares
+              enlazantes y 2 pares libres). ¿Por qué la molécula no es lineal como el CO₂? ¿Qué rol
+              juegan los electrones no compartidos?
+            </p>
+            <div class="guide-q-answer" aria-hidden="true">Tu predicción inicial...</div>
+          </div>
+
+          <!-- 2. Observación 1 -->
+          <div class="guide-q">
+            <span class="guide-q-tag">2. Observación comparativa (Metano, Amoníaco y Agua)</span>
+            <p>
+              Seleccioná sucesivamente CH₄, NH₃ y H₂O. ¿Qué ocurre con el ángulo de enlace a medida
+              que aumentan los pares libres? Registrá los valores del simulador (109,5°, 107,3°,
+              104,5°).
+            </p>
+            <div class="guide-q-answer" aria-hidden="true">Registrá tus observaciones y datos...</div>
+          </div>
+
+          <!-- 3. Observación 2 -->
+          <div class="guide-q">
+            <span class="guide-q-tag">3. Observación de la forma real</span>
+            <p>
+              Activá el botón "Ocultar pares libres" en el amoníaco (NH₃) y en el agua (H₂O). ¿Qué
+              figura forman únicamente los núcleos de los átomos? ¿Por qué la "disposición de los
+              pares" y la "forma de la molécula" se llaman diferente?
+            </p>
+            <div class="guide-q-answer" aria-hidden="true">Anotá qué observaste al ocultar los pares libres...</div>
+          </div>
+
+          <!-- 4. Explicación -->
+          <div class="guide-q">
+            <span class="guide-q-tag">4. Explicación con modelo teórico</span>
+            <p>
+              Según el modelo TRePEV, ¿por qué un par libre ejerce mayor repulsión y ocupa más
+              espacio que un par compartido en un enlace?
+            </p>
+            <div class="guide-q-answer" aria-hidden="true">Justificá con las fuerzas de repulsión entre electrones...</div>
+          </div>
+
+          <!-- 5. Transferencia -->
+          <div class="guide-q">
+            <span class="guide-q-tag">5. Transferencia a un caso nuevo</span>
+            <p>
+              El BF₃ tiene 3 enlaces y 0 pares libres (trigonal plana, 120°). Si una molécula tiene
+              3 dominios en total pero uno de ellos es un par libre (como el SO₂), ¿será su ángulo
+              mayor, igual o menor a 120°? ¿Qué forma tendrá la molécula?
+            </p>
+            <div class="guide-q-answer" aria-hidden="true">Planteá tu deducción para el nuevo caso...</div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button id="btn-print" class="btn btn-secondary">🖨️ Imprimir guía</button>
+          <button id="btn-close-modal-bottom" class="btn btn-primary">Entendido</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Script Vanilla JS Autocontenido -->
+    <script>
+      (function () {
+        'use strict';
+
+        /* =========================================================================
+           1. ESTADO DEL SIMULADOR Y BASE DE DATOS PEDAGÓGICA (CHANG, 12.ª ED.)
+           ========================================================================= */
+
+        const PRESETS_DB = {
+          CO2: {
+            bonding: 2,
+            lone: 0,
+            symbolCentral: 'C',
+            symbolPerip: 'O',
+            formula: 'CO₂',
+            electronGeo: 'Lineal',
+            molecularGeo: 'Lineal',
+            angleText: '180°',
+            angleExact: 180,
+            macro: 'Gas incoloro e inodoro, producto de la respiración celular y la combustión.',
+            submicro: '2 dominios enlazantes dobles se repelen al máximo alejándose en línea recta.',
+            simbolico: 'CO₂ · Tipo AB₂ · 2 enlaces sin pares libres en el carbono.',
+          },
+          BF3: {
+            bonding: 3,
+            lone: 0,
+            symbolCentral: 'B',
+            symbolPerip: 'F',
+            formula: 'BF₃',
+            electronGeo: 'Trigonal plana',
+            molecularGeo: 'Trigonal plana',
+            angleText: '120°',
+            angleExact: 120,
+            macro: 'Gas tóxico fumante empleado como catalizador industrial en química orgánica.',
+            submicro: '3 dominios enlazantes se ubican en un mismo plano separados por 120°.',
+            simbolico: 'BF₃ · Tipo AB₃ · El boro se rodea de 6 electrones estables.',
+          },
+          CH4: {
+            bonding: 4,
+            lone: 0,
+            symbolCentral: 'C',
+            symbolPerip: 'H',
+            formula: 'CH₄',
+            electronGeo: 'Tetraédrica',
+            molecularGeo: 'Tetraédrica',
+            angleText: '109,5°',
+            angleExact: 109.5,
+            macro: 'Gas natural de la cocina: incoloro e inflamable.',
+            submicro: '4 dominios idénticos se repelen equitativamente hacia los 4 vértices tetraédricos.',
+            simbolico: 'CH₄ · Tipo AB₄ · Ángulo tetraédrico perfecto de 109,5°.',
+          },
+          NH3: {
+            bonding: 3,
+            lone: 1,
+            symbolCentral: 'N',
+            symbolPerip: 'H',
+            formula: 'NH₃',
+            electronGeo: 'Tetraédrica',
+            molecularGeo: 'Pirámide trigonal',
+            angleText: '107,3° (menor a 109,5°)',
+            angleExact: 107.3,
+            macro: 'Gas de olor punzante característico usado en productos de limpieza y fertilizantes.',
+            submicro: 'El par libre del N es más voluminoso y empuja a los 3 enlaces N-H hacia abajo.',
+            simbolico: 'NH₃ · Tipo AB₃E · El ángulo se comprime de 109,5° a 107,3° por repulsión.',
+          },
+          H2O: {
+            bonding: 2,
+            lone: 2,
+            symbolCentral: 'O',
+            symbolPerip: 'H',
+            formula: 'H₂O',
+            electronGeo: 'Tetraédrica',
+            molecularGeo: 'Angular',
+            angleText: '104,5° (comprimido)',
+            angleExact: 104.5,
+            macro: 'Líquido vital indispensable; su geometría angular le confiere fuerte polaridad.',
+            submicro: '2 pares libres muy voluminosos cierran fuertemente el ángulo de los enlaces O-H.',
+            simbolico: 'H₂O · Tipo AB₂E₂ · La fuerte repulsión par libre-par libre reduce el ángulo a 104,5°.',
+          },
+        };
+
+        const state = {
+          bondingCount: 4,
+          loneCount: 0,
+          hideLonePairs: false,
+          currentPreset: 'CH4',
+          // Rotación 3D
+          rotationX: 0.35,
+          rotationY: 0.65,
+          isDragging: false,
+          lastPointerX: 0,
+          lastPointerY: 0,
+          // Animación de dominios
+          currentDomains: [], // { type: 'bonding'|'lone', current: [x,y,z], target: [x,y,z] }
+        };
+
+        /* =========================================================================
+           2. CÁLCULO DE POSICIONES GEOMÉTRICAS TRePEV (VSEPR)
+           ========================================================================= */
+
+        function getIdealVectors(total) {
+          if (total === 1) {
+            return [[0, 1, 0]];
+          }
+          if (total === 2) {
+            // Lineal (180°)
+            return [
+              [0, 1, 0],
+              [0, -1, 0],
+            ];
+          }
+          if (total === 3) {
+            // Trigonal plana en plano XY (120°)
+            return [
+              [0, 1, 0],
+              [-Math.sin(Math.PI / 3), -Math.cos(Math.PI / 3), 0],
+              [Math.sin(Math.PI / 3), -Math.cos(Math.PI / 3), 0],
+            ];
+          }
+          if (total === 4) {
+            // Tetraédrica (109.47°)
+            const cosT = -1 / 3;
+            const sinT = Math.sqrt(8) / 3;
+            return [
+              [0, 1, 0],
+              [sinT * Math.cos(0), cosT, sinT * Math.sin(0)],
+              [sinT * Math.cos((2 * Math.PI) / 3), cosT, sinT * Math.sin((2 * Math.PI) / 3)],
+              [sinT * Math.cos((4 * Math.PI) / 3), cosT, sinT * Math.sin((4 * Math.PI) / 3)],
+            ];
+          }
+          if (total === 5) {
+            // Bipirámide trigonal: 2 axiales, 3 ecuatoriales
+            return [
+              [0, 1, 0],
+              [0, -1, 0],
+              [1, 0, 0],
+              [-0.5, 0, Math.sqrt(3) / 2],
+              [-0.5, 0, -Math.sqrt(3) / 2],
+            ];
+          }
+          if (total === 6) {
+            // Octaédrica (90°)
+            return [
+              [0, 1, 0],
+              [0, -1, 0],
+              [1, 0, 0],
+              [-1, 0, 0],
+              [0, 0, 1],
+              [0, 0, -1],
+            ];
+          }
+          return [];
+        }
+
+        // Asignación de posiciones priorizando pares libres según TRePEV
+        function computeTargetPositions(bonding, lone) {
+          const total = bonding + lone;
+          const vectors = getIdealVectors(total);
+
+          // Si hay 4 dominios con pares libres (ej. NH3, H2O), los pares libres se ubican primero
+          // Si hay 5 dominios, pares libres van a posiciones ecuatoriales (pos 2, 3, 4)
+          let loneIndices = [];
+          let bondingIndices = [];
+
+          if (total === 4) {
+            if (lone === 1) {
+              loneIndices = [0];
+              bondingIndices = [1, 2, 3];
+            } else if (lone === 2) {
+              loneIndices = [0, 1];
+              bondingIndices = [2, 3];
+            } else {
+              loneIndices = [];
+              bondingIndices = [0, 1, 2, 3];
+            }
+          } else if (total === 3) {
+            if (lone === 1) {
+              loneIndices = [0];
+              bondingIndices = [1, 2];
+            } else {
+              bondingIndices = [0, 1, 2];
+            }
+          } else if (total === 5) {
+            // En bipirámide trigonal los pares libres van a ecuador (índices 2, 3, 4)
+            const eq = [2, 3, 4];
+            const ax = [0, 1];
+            for (let i = 0; i < lone; i++) loneIndices.push(eq[i]);
+            const remaining = eq.slice(lone).concat(ax);
+            bondingIndices = remaining.slice(0, bonding);
+          } else {
+            for (let i = 0; i < lone; i++) loneIndices.push(i);
+            for (let i = lone; i < total; i++) bondingIndices.push(i);
+          }
+
+          const results = [];
+          bondingIndices.forEach((idx) => {
+            if (vectors[idx]) results.push({ type: 'bonding', target: vectors[idx] });
+          });
+          loneIndices.forEach((idx) => {
+            if (vectors[idx]) results.push({ type: 'lone', target: vectors[idx] });
+          });
+          return results;
+        }
+
+        function updateDomainTargets() {
+          const targetList = computeTargetPositions(state.bondingCount, state.loneCount);
+
+          // Reconciliar con state.currentDomains
+          const newDomains = [];
+          targetList.forEach((item, index) => {
+            let cur = [0, 0, 0];
+            if (state.currentDomains[index]) {
+              cur = [...state.currentDomains[index].current];
+            } else {
+              // Si es un dominio nuevo, nace cerca del centro
+              cur = [item.target[0] * 0.1, item.target[1] * 0.1, item.target[2] * 0.1];
+            }
+            newDomains.push({
+              type: item.type,
+              current: cur,
+              target: item.target,
+            });
+          });
+          state.currentDomains = newDomains;
+        }
+
+        /* =========================================================================
+           3. DEDUCCIÓN DE FORMA, DISPOSICIÓN Y ÁNGULOS (CHANG 12.ª ED.)
+           ========================================================================= */
+
+        function getGeometryData(bonding, lone) {
+          const total = bonding + lone;
+
+          // Si coincide con preset exacto
+          for (let key in PRESETS_DB) {
+            if (PRESETS_DB[key].bonding === bonding && PRESETS_DB[key].lone === lone) {
+              return PRESETS_DB[key];
+            }
+          }
+
+          // Casos generales tabulados en Chang
+          let electronGeo = 'Desconocida';
+          let molecularGeo = 'Desconocida';
+          let angleText = 'Variable';
+          let macro = 'Configuración molecular genérica para análisis de repulsión de pares.';
+          let submicro = '';
+          let simbolico = `Tipo AB${bonding}${lone > 0 ? 'E' + (lone > 1 ? lone : '') : ''}`;
+
+          if (total === 2) {
+            electronGeo = 'Lineal';
+            molecularGeo = bonding === 2 ? 'Lineal' : 'Lineal';
+            angleText = '180°';
+            submicro = '2 dominios con máxima separación angular posible.';
+          } else if (total === 3) {
+            electronGeo = 'Trigonal plana';
+            if (bonding === 3) {
+              molecularGeo = 'Trigonal plana';
+              angleText = '120°';
+              submicro = '3 dominios en un plano separados simétricamente por 120°.';
+            } else if (bonding === 2) {
+              molecularGeo = 'Angular';
+              angleText = '< 120°';
+              submicro = 'El par libre empuja a los 2 enlaces y comprime el ángulo a menos de 120°.';
+            }
+          } else if (total === 4) {
+            electronGeo = 'Tetraédrica';
+            if (bonding === 4) {
+              molecularGeo = 'Tetraédrica';
+              angleText = '109,5°';
+              submicro = '4 enlaces simétricos orientados hacia los vértices de un tetraedro.';
+            } else if (bonding === 3) {
+              molecularGeo = 'Pirámide trigonal';
+              angleText = 'menor que en el CH₄ (107,3°)';
+              submicro = 'El par libre más ancho comprime los ángulos de enlace.';
+            } else if (bonding === 2) {
+              molecularGeo = 'Angular';
+              angleText = 'menor que en el CH₄ (104,5°)';
+              submicro = 'Los dos pares libres repelen fuertemente a los dos enlaces.';
+            } else if (bonding === 1) {
+              molecularGeo = 'Lineal';
+              angleText = 'No aplica (1 enlace)';
+              submicro = 'Un solo enlace con 3 pares libres alrededor del centro.';
+            }
+          } else if (total === 5) {
+            electronGeo = 'Bipirámide trigonal';
+            if (bonding === 5) {
+              molecularGeo = 'Bipirámide trigonal';
+              angleText = '120° (ec.) / 90° (ax.)';
+              submicro = '5 dominios distribuidos en 3 ecuatoriales y 2 axiales.';
+            } else if (bonding === 4) {
+              molecularGeo = 'Balancín (tetraedro deformado)';
+              angleText = '< 120° y < 90°';
+              submicro = 'El par libre ocupa el ecuador minimizando repulsiones a 90°.';
+            } else if (bonding === 3) {
+              molecularGeo = 'Forma de T';
+              angleText = '< 90°';
+              submicro = '2 pares libres ocupan posiciones ecuatoriales.';
+            } else if (bonding === 2) {
+              molecularGeo = 'Lineal';
+              angleText = '180°';
+              submicro = '3 pares libres en el ecuador dejan a los 2 enlaces lineales.';
+            }
+          } else if (total === 6) {
+            electronGeo = 'Octaédrica';
+            if (bonding === 6) {
+              molecularGeo = 'Octaédrica';
+              angleText = '90°';
+              submicro = '6 dominios con separación uniforme de 90°.';
+            } else if (bonding === 5) {
+              molecularGeo = 'Pirámide de base cuadrada';
+              angleText = '< 90°';
+              submicro = '1 par libre en un vértice distorsiona los 5 enlaces.';
+            } else if (bonding === 4) {
+              molecularGeo = 'Cuadrada plana';
+              angleText = '90°';
+              submicro = '2 pares libres en lados opuestos mantienen la simetría planar.';
+            }
+          }
+
+          return {
+            bonding,
+            lone,
+            formula: `AB${bonding}${lone > 0 ? 'E' + (lone > 1 ? lone : '') : ''}`,
+            electronGeo,
+            molecularGeo,
+            angleText,
+            macro,
+            submicro,
+            simbolico,
+          };
+        }
+
+        /* =========================================================================
+           4. RENDERIZADO 3D EN CANVAS 2D (SIN LIBRERÍAS, ALGORITMO DEL PINTOR)
+           ========================================================================= */
+
+        const canvas = document.getElementById('mol-canvas');
+        const ctx = canvas.getContext('2d');
+        const container = document.getElementById('canvas-container');
+
+        let width = 0;
+        let height = 0;
+        let dpr = 1;
+
+        function resizeCanvas() {
+          const rect = container.getBoundingClientRect();
+          dpr = window.devicePixelRatio || 1;
+          width = rect.width;
+          height = rect.height;
+          canvas.width = Math.floor(width * dpr);
+          canvas.height = Math.floor(height * dpr);
+          ctx.setTransform(1, 0, 0, 1, 0, 0);
+          ctx.scale(dpr, dpr);
+        }
+
+        // Rotación 3D: rotar punto [x,y,z] por pitch (X) y yaw (Y)
+        function rotate3D(v, rx, ry) {
+          const cosY = Math.cos(ry);
+          const sinY = Math.sin(ry);
+          const x1 = v[0] * cosY + v[2] * sinY;
+          const y1 = v[1];
+          const z1 = -v[0] * sinY + v[2] * cosY;
+
+          const cosX = Math.cos(rx);
+          const sinX = Math.sin(rx);
+          const x2 = x1;
+          const y2 = y1 * cosX - z1 * sinX;
+          const z2 = y1 * sinX + z1 * cosX;
+
+          return [x2, y2, z2];
+        }
+
+        // Vector de luz para sombreado especular e iluminación difusa realista
+        const lightDir = [-0.45, 0.65, 0.6];
+        const lightLen = Math.hypot(...lightDir);
+        const lightNorm = [lightDir[0] / lightLen, lightDir[1] / lightLen, lightDir[2] / lightLen];
+
+        function drawSphere(centerX, centerY, radius, baseColor, highlightColor) {
+          ctx.save();
+          const grad = ctx.createRadialGradient(
+            centerX - radius * 0.35,
+            centerY - radius * 0.35,
+            radius * 0.08,
+            centerX,
+            centerY,
+            radius
+          );
+          grad.addColorStop(0, highlightColor || '#ffffff');
+          grad.addColorStop(0.35, baseColor);
+          grad.addColorStop(1, '#0f172a');
+
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Borde suave
+          ctx.strokeStyle = 'rgba(15, 23, 42, 0.15)';
+          ctx.lineWidth = 1;
+          ctx.stroke();
+          ctx.restore();
+        }
+
+        function drawBondCylinder(x1, y1, x2, y2, zMid) {
+          ctx.save();
+          const angle = Math.atan2(y2 - y1, x2 - x1);
+          const length = Math.hypot(x2 - x1, y2 - y1);
+
+          ctx.translate(x1, y1);
+          ctx.rotate(angle);
+
+          const bondThickness = Math.max(7, Math.min(12, 10 + zMid * 0.03));
+          const grad = ctx.createLinearGradient(0, -bondThickness / 2, 0, bondThickness / 2);
+          grad.addColorStop(0, '#cbd5e1');
+          grad.addColorStop(0.4, '#f8fafc');
+          grad.addColorStop(1, '#64748b');
+
+          ctx.fillStyle = grad;
+          ctx.fillRect(0, -bondThickness / 2, length, bondThickness);
+
+          ctx.strokeStyle = 'rgba(71, 85, 105, 0.3)';
+          ctx.lineWidth = 1;
+          ctx.strokeRect(0, -bondThickness / 2, length, bondThickness);
+          ctx.restore();
+        }
+
+        // Dibuja lóbulo de par libre: forma de pera ensanchada en 3D
+        function drawLonePairLobe(cx, cy, targetX, targetY, zDepth, isHidden) {
+          ctx.save();
+
+          const dx = targetX - cx;
+          const dy = targetY - cy;
+          const dist = Math.hypot(dx, dy);
+          const angle = Math.atan2(dy, dx);
+
+          ctx.translate(cx, cy);
+          ctx.rotate(angle);
+
+          const lobeLength = dist * 0.95;
+          const lobeWidth = Math.max(28, dist * 0.42);
+
+          // Si el usuario activó "Ocultar pares libres", se desvanece casi por completo
+          const alpha = isHidden ? 0.08 : 0.45;
+          const strokeAlpha = isHidden ? 0.15 : 0.85;
+
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          // Curva de lóbulo voluminoso más ancho
+          ctx.bezierCurveTo(
+            lobeLength * 0.4,
+            -lobeWidth * 0.85,
+            lobeLength * 0.85,
+            -lobeWidth * 0.7,
+            lobeLength,
+            0
+          );
+          ctx.bezierCurveTo(
+            lobeLength * 0.85,
+            lobeWidth * 0.7,
+            lobeLength * 0.4,
+            lobeWidth * 0.85,
+            0,
+            0
+          );
+          ctx.closePath();
+
+          const grad = ctx.createRadialGradient(
+            lobeLength * 0.7,
+            0,
+            5,
+            lobeLength * 0.5,
+            0,
+            lobeWidth
+          );
+          grad.addColorStop(0, `rgba(255, 230, 200, ${alpha * 1.5})`);
+          grad.addColorStop(0.5, `rgba(224, 122, 31, ${alpha})`);
+          grad.addColorStop(1, `rgba(224, 122, 31, ${alpha * 0.2})`);
+
+          ctx.fillStyle = grad;
+          ctx.fill();
+
+          ctx.strokeStyle = `rgba(224, 122, 31, ${strokeAlpha})`;
+          ctx.lineWidth = 1.8;
+          ctx.setLineDash([4, 4]);
+          ctx.stroke();
+
+          // Representación de los dos electrones del par en el lóbulo
+          if (!isHidden) {
+            ctx.setLineDash([]);
+            const dotDist = lobeLength * 0.68;
+            const dotSpread = lobeWidth * 0.24;
+
+            ctx.fillStyle = '#ffffff';
+            ctx.shadowColor = '#e07a1f';
+            ctx.shadowBlur = 4;
+
+            // Electrón 1
+            ctx.beginPath();
+            ctx.arc(dotDist, -dotSpread, 3.2, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Electrón 2
+            ctx.beginPath();
+            ctx.arc(dotDist, dotSpread, 3.2, 0, Math.PI * 2);
+            ctx.fill();
+          }
+
+          ctx.restore();
+        }
+
+        // Renderizado del ángulo de enlace
+        function drawAngleArc(cx, cy, p1, p2, angleText) {
+          const v1x = p1[0] - cx;
+          const v1y = p1[1] - cy;
+          const v2x = p2[0] - cx;
+          const v2y = p2[1] - cy;
+
+          const a1 = Math.atan2(v1y, v1x);
+          let a2 = Math.atan2(v2y, v2x);
+
+          let diff = a2 - a1;
+          while (diff < -Math.PI) diff += 2 * Math.PI;
+          while (diff > Math.PI) diff -= 2 * Math.PI;
+
+          const arcRadius = 45;
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(cx, cy, arcRadius, a1, a1 + diff, diff < 0);
+          ctx.strokeStyle = '#e07a1f';
+          ctx.lineWidth = 2.5;
+          ctx.setLineDash([3, 3]);
+          ctx.stroke();
+
+          // Etiqueta del ángulo
+          const midAngle = a1 + diff / 2;
+          const labelDist = arcRadius + 22;
+          const labelX = cx + Math.cos(midAngle) * labelDist;
+          const labelY = cy + Math.sin(midAngle) * labelDist;
+
+          ctx.setLineDash([]);
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+          ctx.strokeStyle = '#e07a1f';
+          ctx.lineWidth = 1;
+
+          const textWidth = ctx.measureText(angleText).width;
+          ctx.beginPath();
+          ctx.roundRect(labelX - textWidth / 2 - 6, labelY - 11, textWidth + 12, 22, 6);
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.font = 'bold 11px Arial';
+          ctx.fillStyle = '#e07a1f';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(angleText, labelX, labelY);
+          ctx.restore();
+        }
+
+        function render() {
+          ctx.clearRect(0, 0, width, height);
+
+          const centerX = width / 2;
+          const centerY = height / 2;
+          const scale = Math.min(width, height) * 0.35;
+
+          // Suavizado / interpolación de dominios hacia sus posiciones ideales
+          let needsUpdate = false;
+          state.currentDomains.forEach((dom) => {
+            for (let i = 0; i < 3; i++) {
+              const diff = dom.target[i] - dom.current[i];
+              if (Math.abs(diff) > 0.001) {
+                dom.current[i] += diff * 0.12;
+                needsUpdate = true;
+              } else {
+                dom.current[i] = dom.target[i];
+              }
+            }
+          });
+
+          // Proyección 3D de elementos
+          const drawQueue = [];
+
+          // 1. Átomo central en (0, 0, 0)
+          const centralRot = rotate3D([0, 0, 0], state.rotationX, state.rotationY);
+          drawQueue.push({
+            type: 'central',
+            z: centralRot[2],
+            draw: () => {
+              drawSphere(centerX, centerY, 24, '#1f5c8b', '#60a5fa');
+              // Símbolo del átomo central
+              const preset = PRESETS_DB[state.currentPreset];
+              const symbol = preset ? preset.symbolCentral : 'A';
+              ctx.save();
+              ctx.font = 'bold 13px Arial';
+              ctx.fillStyle = '#ffffff';
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'middle';
+              ctx.fillText(symbol, centerX, centerY);
+              ctx.restore();
+            },
+          });
+
+          // 2. Dominios (enlazantes o pares libres)
+          const projectedBondPoints = [];
+
+          state.currentDomains.forEach((dom, index) => {
+            const rot = rotate3D(dom.current, state.rotationX, state.rotationY);
+            const px = centerX + rot[0] * scale;
+            const py = centerY - rot[1] * scale; // Invertir Y para coordenadas de pantalla
+            const pz = rot[2];
+
+            if (dom.type === 'bonding') {
+              projectedBondPoints.push({ x: px, y: py, z: pz });
+
+              // El enlace
+              drawQueue.push({
+                type: 'bond',
+                z: pz * 0.5,
+                draw: () => {
+                  drawBondCylinder(centerX, centerY, px, py, pz * scale);
+                },
+              });
+
+              // El átomo periférico (esfera)
+              drawQueue.push({
+                type: 'atom',
+                z: pz,
+                draw: () => {
+                  const radius = 17 + pz * 2;
+                  drawSphere(px, py, Math.max(12, radius), '#94a3b8', '#ffffff');
+                  const preset = PRESETS_DB[state.currentPreset];
+                  const symbol = preset ? preset.symbolPerip : 'B';
+                  ctx.save();
+                  ctx.font = 'bold 11px Arial';
+                  ctx.fillStyle = '#1e293b';
+                  ctx.textAlign = 'center';
+                  ctx.textBaseline = 'middle';
+                  ctx.fillText(symbol, px, py);
+                  ctx.restore();
+                },
+              });
+            } else {
+              // Par libre (lóbulo más ancho)
+              drawQueue.push({
+                type: 'lone',
+                z: pz,
+                draw: () => {
+                  drawLonePairLobe(
+                    centerX,
+                    centerY,
+                    px,
+                    py,
+                    pz * scale,
+                    state.hideLonePairs
+                  );
+                },
+              });
+            }
+          });
+
+          // Ordenamiento de profundidad: algoritmo del pintor (z menor dibuja primero)
+          drawQueue.sort((a, b) => a.z - b.z);
+          drawQueue.forEach((item) => item.draw());
+
+          // 3. Dibujar arco del ángulo si hay al menos 2 pares enlazantes
+          if (projectedBondPoints.length >= 2) {
+            const p1 = [projectedBondPoints[0].x, projectedBondPoints[0].y];
+            const p2 = [projectedBondPoints[1].x, projectedBondPoints[1].y];
+            const geoData = getGeometryData(state.bondingCount, state.loneCount);
+            drawAngleArc(centerX, centerY, p1, p2, geoData.angleText.split(' ')[0]);
+          }
+
+          requestAnimationFrame(render);
+        }
+
+        /* =========================================================================
+           5. GESTIÓN DE EVENTOS DE ROTACIÓN 3D (MOUSE Y TOUCH)
+           ========================================================================= */
+
+        function handlePointerDown(e) {
+          state.isDragging = true;
+          const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+          const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+          state.lastPointerX = clientX;
+          state.lastPointerY = clientY;
+        }
+
+        function handlePointerMove(e) {
+          if (!state.isDragging) return;
+          const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+          const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+          const deltaX = clientX - state.lastPointerX;
+          const deltaY = clientY - state.lastPointerY;
+
+          state.rotationY += deltaX * 0.01;
+          state.rotationX += deltaY * 0.01;
+
+          // Limitar cabeceo (pitch) para evitar giro inverso abrupto
+          state.rotationX = Math.max(-Math.PI / 2.2, Math.min(Math.PI / 2.2, state.rotationX));
+
+          state.lastPointerX = clientX;
+          state.lastPointerY = clientY;
+        }
+
+        function handlePointerUp() {
+          state.isDragging = false;
+        }
+
+        const canvasWrapper = document.getElementById('canvas-container');
+        canvasWrapper.addEventListener('mousedown', handlePointerDown);
+        window.addEventListener('mousemove', handlePointerMove);
+        window.addEventListener('mouseup', handlePointerUp);
+
+        canvasWrapper.addEventListener('touchstart', handlePointerDown, { passive: true });
+        window.addEventListener('touchmove', handlePointerMove, { passive: true });
+        window.addEventListener('touchend', handlePointerUp);
+
+        /* =========================================================================
+           6. ACTUALIZACIÓN DE INTERFAZ Y TEXTOS PEDAGÓGICOS
+           ========================================================================= */
+
+        const countBondingEl = document.getElementById('count-bonding');
+        const countLoneEl = document.getElementById('count-lone');
+        const totalDomainsEl = document.getElementById('total-domains-badge');
+        const valElectronGeoEl = document.getElementById('val-electron-geo');
+        const valMolecularGeoEl = document.getElementById('val-molecular-geo');
+        const valAngleEl = document.getElementById('val-angle');
+        const formulaBadgeEl = document.getElementById('vsepr-formula-badge');
+        const seeMacroEl = document.getElementById('see-macro');
+        const seeSubmicroEl = document.getElementById('see-submicro');
+        const seeSimbolicoEl = document.getElementById('see-simbolico');
+        const btnToggleLone = document.getElementById('btn-toggle-lone');
+
+        const btnAddBonding = document.getElementById('btn-add-bonding');
+        const btnSubBonding = document.getElementById('btn-sub-bonding');
+        const btnAddLone = document.getElementById('btn-add-lone');
+        const btnSubLone = document.getElementById('btn-sub-lone');
+
+        function updateUI() {
+          const bonding = state.bondingCount;
+          const lone = state.loneCount;
+          const total = bonding + lone;
+
+          countBondingEl.textContent = bonding;
+          countLoneEl.textContent = lone;
+          totalDomainsEl.textContent = `Total: ${total} dominio${total !== 1 ? 's' : ''}`;
+
+          // Límites de botones
+          btnSubBonding.disabled = bonding <= 1;
+          btnAddBonding.disabled = total >= 6;
+          btnSubLone.disabled = lone <= 0;
+          btnAddLone.disabled = total >= 6;
+
+          // Datos de geometría y textos
+          const data = getGeometryData(bonding, lone);
+
+          valElectronGeoEl.textContent = data.electronGeo;
+          valMolecularGeoEl.textContent = data.molecularGeo;
+          valAngleEl.textContent = data.angleText;
+          formulaBadgeEl.textContent = `Tipo: ${data.formula}`;
+
+          seeMacroEl.textContent = data.macro;
+          seeSubmicroEl.textContent = data.submicro;
+          seeSimbolicoEl.textContent = data.simbolico;
+
+          // Presets activos
+          document.querySelectorAll('.preset-btn').forEach((btn) => {
+            const key = btn.getAttribute('data-preset');
+            if (
+              PRESETS_DB[key] &&
+              PRESETS_DB[key].bonding === bonding &&
+              PRESETS_DB[key].lone === lone
+            ) {
+              btn.classList.add('active');
+            } else {
+              btn.classList.remove('active');
+            }
+          });
+
+          // Actualizar botón de ocultar pares libres
+          if (lone === 0) {
+            btnToggleLone.disabled = true;
+            btnToggleLone.classList.remove('active');
+            btnToggleLone.setAttribute('aria-pressed', 'false');
+          } else {
+            btnToggleLone.disabled = false;
+            if (state.hideLonePairs) {
+              btnToggleLone.classList.add('active');
+              btnToggleLone.setAttribute('aria-pressed', 'true');
+            } else {
+              btnToggleLone.classList.remove('active');
+              btnToggleLone.setAttribute('aria-pressed', 'false');
+            }
+          }
+
+          updateDomainTargets();
+        }
+
+        // Manejadores de dominios
+        btnAddBonding.addEventListener('click', () => {
+          if (state.bondingCount + state.loneCount < 6) {
+            state.bondingCount++;
+            state.currentPreset = 'custom';
+            updateUI();
+          }
+        });
+
+        btnSubBonding.addEventListener('click', () => {
+          if (state.bondingCount > 1) {
+            state.bondingCount--;
+            state.currentPreset = 'custom';
+            updateUI();
+          }
+        });
+
+        btnAddLone.addEventListener('click', () => {
+          if (state.bondingCount + state.loneCount < 6) {
+            state.loneCount++;
+            state.currentPreset = 'custom';
+            updateUI();
+          }
+        });
+
+        btnSubLone.addEventListener('click', () => {
+          if (state.loneCount > 0) {
+            state.loneCount--;
+            state.currentPreset = 'custom';
+            updateUI();
+          }
+        });
+
+        // Toggle pares libres
+        btnToggleLone.addEventListener('click', () => {
+          state.hideLonePairs = !state.hideLonePairs;
+          updateUI();
+        });
+
+        // Centrar orientación
+        document.getElementById('btn-center').addEventListener('click', () => {
+          state.rotationX = 0.35;
+          state.rotationY = 0.65;
+        });
+
+        // Presets rápidos
+        document.querySelectorAll('.preset-btn').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            const key = btn.getAttribute('data-preset');
+            if (PRESETS_DB[key]) {
+              state.bondingCount = PRESETS_DB[key].bonding;
+              state.loneCount = PRESETS_DB[key].lone;
+              state.currentPreset = key;
+              state.hideLonePairs = false;
+              updateUI();
+            }
+          });
+        });
+
+        // Botón reiniciar
+        document.getElementById('btn-reset').addEventListener('click', () => {
+          state.bondingCount = 4;
+          state.loneCount = 0;
+          state.hideLonePairs = false;
+          state.currentPreset = 'CH4';
+          state.rotationX = 0.35;
+          state.rotationY = 0.65;
+          updateUI();
+        });
+
+        /* =========================================================================
+           7. MODAL DE GUÍA DE TRABAJO (E IMPRESIÓN)
+           ========================================================================= */
+
+        const guideModal = document.getElementById('guide-modal');
+        const btnGuia = document.getElementById('btn-guia');
+        const btnCloseModal = document.getElementById('btn-close-modal');
+        const btnCloseModalBottom = document.getElementById('btn-close-modal-bottom');
+        const btnPrint = document.getElementById('btn-print');
+
+        function openModal() {
+          guideModal.classList.add('open');
+          btnCloseModal.focus();
+        }
+
+        function closeModal() {
+          guideModal.classList.remove('open');
+          btnGuia.focus();
+        }
+
+        btnGuia.addEventListener('click', openModal);
+        btnCloseModal.addEventListener('click', closeModal);
+        btnCloseModalBottom.addEventListener('click', closeModal);
+
+        guideModal.addEventListener('click', (e) => {
+          if (e.target === guideModal) {
+            closeModal();
+          }
+        });
+
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape' && guideModal.classList.contains('open')) {
+            closeModal();
+          }
+        });
+
+        btnPrint.addEventListener('click', () => {
+          window.print();
+        });
+
+        /* =========================================================================
+           8. INICIALIZACIÓN
+           ========================================================================= */
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+        updateUI();
+        requestAnimationFrame(render);
+      })();
+    </script>
+  </body>
+</html>
+
+<!--
+================================================================================
+DATOS UTILIZADOS Y FUENTES BIBLIOGRÁFICAS (Química, Raymond Chang, 12.ª edición):
+================================================================================
+Los valores numéricos de ángulos, disposiciones de pares y formas moleculares fueron
+extraídos estrictamente del Capítulo 10 ("Geometría molecular e hibridación de orbitales
+atómicos"):
+
+1. Tabla 10.1: Geometría de pares de electrones y forma molecular de moléculas en las
+   que el átomo central no tiene pares libres:
+   - CO₂: 2 pares enlazantes, 0 pares libres (AB₂).
+     Disposición: Lineal. Forma: Lineal. Ángulo: 180° (pág. 413).
+   - BF₃: 3 pares enlazantes, 0 pares libres (AB₃).
+     Disposición: Trigonal plana. Forma: Trigonal plana. Ángulo: 120° (pág. 414).
+   - CH₄: 4 pares enlazantes, 0 pares libres (AB₄).
+     Disposición: Tetraédrica. Forma: Tetraédrica. Ángulo: 109,5° (pág. 415).
+
+2. Tabla 10.2: Geometría molecular de especies en las que el átomo central tiene uno o
+   más pares libres (TRePEV):
+   - NH₃: 3 pares enlazantes, 1 par libre (AB₃E).
+     Disposición: Tetraédrica. Forma: Pirámide trigonal.
+     Ángulo experimental H-N-H: 107,3° (pág. 417).
+   - H₂O: 2 pares enlazantes, 2 pares libres (AB₂E₂).
+     Disposición: Tetraédrica. Forma: Angular.
+     Ángulo experimental H-O-H: 104,5° (pág. 418).
+   - SO₂: 2 pares enlazantes, 1 par libre (AB₂E).
+     Disposición: Trigonal plana. Forma: Angular. Ángulo: < 120° (cualitativo/Chang pág. 416).
+
+3. Jerarquía de fuerzas de repulsión (Sección 10.1, pág. 417):
+   Repulsión par libre - par libre > repulsión par libre - par enlazante > repulsión par enlazante - par enlazante.
+   Razón teórica: Los electrones de un par libre están sometidos a la atracción de un solo núcleo,
+   por lo que ocupan un volumen mayor y ejercen una fuerza repulsiva más intensa sobre los pares
+   enlazantes vecinos, comprimiendo los ángulos de enlace de 109,5° a 107,3° y 104,5°.
+
+4. Criterio de electronegatividad (Capítulo 9):
+   La transición entre enlaces covalentes polares e iónicos es continua. No se utiliza el corte
+   arbitrario de 1,7; se menciona la regla práctica de ΔEN ≈ 2,0 sujeta a excepciones experimentales.
+================================================================================
+-->
